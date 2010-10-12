@@ -21,7 +21,7 @@ object GenerateReport {
   }
 
   def readAnswers: List[Answers] = {
-		val rawAnswers = openDataFileRaw("ankiety.csv") take 1000
+		val rawAnswers = openDataFileRaw("ankiety.csv")
 		val rawComments = openDataFileRaw("komentarze.csv")
 		def parseSubject(x: List[String]): Subject = {
 			val period :: code :: description :: Nil = x
@@ -43,18 +43,30 @@ object GenerateReport {
 			val value :: description :: Nil = x
 			Answer(question, value.toInt, description)
 		}
-		val partialAnswers: List[(String, Answer)] = for (x <- rawAnswers) yield {
-	  	val (rawSubject, rest1) = x splitAt 3
-			val (rawClass, rest2) = rest1 splitAt 3
-			val (rawPerson, rest3) = rest2 splitAt 6
-			val (rawQuestion, rest4) = rest3 splitAt 3
-			val (rawAnswer, id :: Nil) = rest4 splitAt 2
-			(id, parseAnswer(parseQuestion(rawQuestion), rawAnswer))
-		}
+		val questions: Map[String, Question] = (for (x <- rawAnswers) yield {
+			val (rawQuestion, _) = (x drop 12) splitAt 3
+			val q = parseQuestion(rawQuestion)
+			q.id -> q
+		}).toMap
+		val subjects: Map[String, Subject] = (for (x <- rawAnswers) yield {
+			val subject = parseSubject(x take 3)
+			subject.code -> subject
+		}).toMap
+		val classes: Map[String, Class] = (for (x <- rawAnswers) yield {
+			val (_ :: code :: _ :: Nil, rest1) = x splitAt 3
+			val (rawClass, _) = rest1 splitAt 3
+			val clazz = parseClass(subjects(code), rawClass)
+			clazz.id -> clazz
+		}).toMap
+		val partialAnswers: Map[String, List[Answer]] = (for (x <- rawAnswers) yield {
+			val questionId :: Nil = (x drop 12) take 1
+			val (rawAnswer, sheetId :: Nil) = (x drop 15) splitAt 2
+			sheetId -> parseAnswer(questions(questionId), rawAnswer)
+		}).groupBy(_._1).mapValues(_.map(_._2))
 		
 		val comments: Map[String, String] = (for (x <- rawComments) yield {
 			val value :: id :: Nil = x drop 12
-			(id: String, value: String)
+			id -> value
 		}).toMap
 		
 		val answers: List[Answers] = for (x <- rawAnswers) yield {
@@ -62,10 +74,10 @@ object GenerateReport {
 			val (rawClass, rest2) = rest1 splitAt 3
 			val (rawPerson, rest3) = rest2 splitAt 6
 			val (rawQuestion, rest4) = rest3 splitAt 3
-			val (rawAnswer, id :: Nil) = rest4 splitAt 2
-			val values = partialAnswers collect { case (answerId, answer) if answerId == id => answer }
-			val comment = comments get id
-			Answers(id, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson), values, comment)
+			val (rawAnswer, sheetId :: Nil) = rest4 splitAt 2
+			val values = partialAnswers(sheetId)
+			val comment = comments get sheetId
+			Answers(sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson), values, comment)
 		}
 		answers
   }
@@ -113,24 +125,33 @@ object GenerateReport {
     splitMapsByCommonParts(collection)
   }**/
 
-	def personMeanAndVariance(xs: List[Answers]): Map[Person, Map[Question, (Double, Double)]] = {
-		def meanAndVariance(xs: List[Int]): (Double, Double) = {
+	def personMeanAndDevation(xs: List[Answers]): Map[Person, Map[Question, (Double, Double)]] = {
+		def meanAndDevation(xs: List[Int]): (Double, Double) = {
 			val mean = (xs.sum: Double) / xs.size
 			val variance = xs.foldLeft(0: Double) {
 				case (acc, x) => ((x-mean)*(x-mean): Double)/xs.size + acc
 			}
-			(mean, variance)
+			(mean, scala.math.sqrt(variance))
 		}
 		val perPerson: Map[Person, List[Answers]] = xs groupBy (_.person)
 		perPerson mapValues { xs =>
 			val questions: Map[Question, List[Answer]] = (for (x <- xs; answer <- x.values) yield answer) groupBy (_.question)
-			questions mapValues (xs => meanAndVariance(xs map (_.value)))
+			questions mapValues (xs => meanAndDevation(xs map (_.value)))
 		}
 	}
 
   def main(args: Array[String]){
     val answers = readAnswers
-		// println(answers mkString "\n\n")
-		println(personMeanAndVariance(answers) mkString "\n")
+		val xs: List[(Person, Question, (Double, Double))] = for {
+			(person, qs) <- personMeanAndDevation(answers).toList
+			(question, (mean, devation)) <- qs.toList
+		} yield (person, question, (mean, devation))
+		val byDevation = xs sortBy {
+			case (_, _, (_, devation)) => -devation
+		}
+		for ((person, question, (mean, devation)) <- byDevation take 40) {
+			println(person)
+			println("Mean %1f, Devation %2f and Question %3s".format(mean, devation, question.toString))
+		}
   }
 }
