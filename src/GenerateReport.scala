@@ -23,12 +23,16 @@ object GenerateReport {
 			(person, qs) <- personMeanAndDevation(answers).toList
 			(question, (mean, devation)) <- qs.toList
 		} yield (person, question, (mean, devation))
-		val byDevation = xs sortBy {
-			case (_, _, (_, devation)) => -devation
+        val xss = xs filter {
+            case (_, question, (_, _)) => !question.value.startsWith("Na ilu ")
+        }
+		val byDevation = xss sortBy {
+			case (_, _, (mean, devation)) => -mean
 		}
-		for ((person, question, (mean, devation)) <- byDevation take 40) {
-			println(person)
-			println("Mean %1f, Devation %2f and Question %3s".format(mean, devation, question.toString))
+		for ((person, question, (mean, devation)) <- byDevation) {
+			print(person)
+            print(" " * (45 - person.toString().length))
+			println("Mean: %1f,\tDev: %2f and Question '%3s'".format(mean, devation, question))
 		}
   }
 }
