@@ -1,0 +1,14 @@
+body {
+    border: 1px solid black;
+    margin: 50px 150px;
+    text-align: center;
+    font-family: "Futura", "Trebuchet MS", sans-serif
+}
+
+h1 {
+    font-size: 50px;
+}
+
+table {
+    border: 1px solid red;
+}

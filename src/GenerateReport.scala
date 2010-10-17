@@ -1,5 +1,6 @@
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
+import surveys.HTMLGenerator.HTMLGenerator
 
 object GenerateReport {
   def personMeanAndDevation(xs: List[Answers]): Map[Person, Map[Question, (Double, Double)]] = {
@@ -34,5 +35,7 @@ object GenerateReport {
             print(" " * (45 - person.toString().length))
 			println("Mean: %1f,\tDev: %2f and Question '%3s'".format(mean, devation, question))
 		}
+
+    HTMLGenerator.write_report(Map("body_text" -> "ble!"))
   }
 }
