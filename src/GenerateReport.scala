@@ -31,7 +31,7 @@ object GenerateReport {
 			(question, stats) <- qs.toList
 		} yield (person, question, stats)
         val xss = xs filter {
-            case (person, question, _) => person.name.startsWith("Szy") && person.lastName.startsWith("Ac")
+            case (person, question, _) => person.name.startsWith("Mar") && person.lastName.startsWith("En")
         }
 		val byDevation = xss sortBy {
 			case (_, _, Stats(mean, devation, _, _)) => -mean
