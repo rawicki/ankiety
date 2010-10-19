@@ -47,27 +47,26 @@ object DataImporter {
 			val clazz = parseClass(subjects(code), rawClass)
 			clazz.id -> clazz
 		}).toMap
-		val partialAnswers: Map[String, List[Answer]] = (for (x <- rawAnswers) yield {
-			val questionId :: Nil = (x drop 12) take 1
-			val (rawAnswer, sheetId :: Nil) = (x drop 15) splitAt 2
-			sheetId -> parseAnswer(questions(questionId), rawAnswer)
-		}).groupBy(_._1).mapValues(_.map(_._2))
-
 		val comments: Map[String, String] = (for (x <- rawComments) yield {
 			val value :: id :: Nil = x drop 12
 			id -> value
 		}).toMap
-
-		val answers: List[Answers] = for (x <- rawAnswers) yield {
-	  	val (rawSubject, rest1) = x splitAt 3
+		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- rawAnswers) yield {
+            val (rawSubject, rest1) = x splitAt 3
 			val (rawClass, rest2) = rest1 splitAt 3
 			val (rawPerson, rest3) = rest2 splitAt 6
 			val (rawQuestion, rest4) = rest3 splitAt 3
 			val (rawAnswer, sheetId :: Nil) = rest4 splitAt 2
-			val values = partialAnswers(sheetId)
-			val comment = comments get sheetId
-			Answers(sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson), values, comment)
+            val question = parseQuestion(rawQuestion)
+            val answer = parseAnswer(question, rawAnswer)
+			((sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson)), answer)
 		}
+        val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
+            (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
+        val answers: List[Answers] = (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
+            val comment = comments get sheetId
+            Answers(sheetId, clazz, person, answers, comment)
+        }).toList
 		answers
   }
 }
