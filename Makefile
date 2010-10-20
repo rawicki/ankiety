@@ -1,11 +1,9 @@
-CLASSES=src/scalate-core-1.2.jar:src/slf4j-api-1.6.0.jar:src/slf4j-nop-1.6.0.jar
-
 all:
 	mkdir -p classes
-	scalac -d ./classes -classpath $(CLASSES) src/*.scala
+	scalac -d ./classes src/*.scala
 
 stats:
-	scala -classpath classes:$(CLASSES) GenerateReport
+	scala -classpath classes GenerateReport
 
 clean:
 	rm -rf classes
