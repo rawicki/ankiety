@@ -184,6 +184,33 @@ object GenerateReport {
               </tbody>
             </table>
           </div>
+          <div class="center">
+            <h2>15 najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Osoba</th>
+                  <th>Przedmiot</th>
+                  <th>Oceny</th>
+                  <th>Obecność</th>
+                  <th>Próbka</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  for(((person, subject), (attendance, questions)) <- statsByPersonSubject.sortBy(-_._2._2.dev) take 15) yield {
+                    <tr>
+                      <th>{ person }</th>
+                      <td>{ subject }</td>
+                      <td>{ show_mean(attendance) }</td>
+                      <td>{ show_mean(questions) }</td>
+                      <td>{ attendance.sample_size }</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
         </body>
       </html>
     fw.write(report.toString)
