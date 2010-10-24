@@ -182,8 +182,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(attendance) }</td>
                       <td>{ show_mean(questions) }</td>
+                      <td>{ show_mean(attendance) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
@@ -209,8 +209,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(attendance) }</td>
                       <td>{ show_mean(questions) }</td>
+                      <td>{ show_mean(attendance) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
@@ -236,8 +236,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(attendance) }</td>
                       <td>{ show_mean(questions) }</td>
+                      <td>{ show_mean(attendance) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
