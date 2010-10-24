@@ -226,7 +226,7 @@ object GenerateReport {
                       <th>{ person }</th>
                       <td>{ subject }</td>
                       <td>{ show_mean(questions) }{ dumpForSparkbar(questions, 1 to 7) }</td>
-                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 5) }</td>
+                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 10) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
@@ -253,7 +253,7 @@ object GenerateReport {
                       <th>{ person }</th>
                       <td>{ subject }</td>
                       <td>{ show_mean(questions) }{ dumpForSparkbar(questions, 1 to 7) }</td>
-                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 5) }</td>
+                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 10) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
