@@ -114,7 +114,7 @@ object GenerateReport {
                       <th>{ label1 }</th>
                       {
                         for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                          <td style="padding: 4px;">{ show_double(stats1 correlationWith stats2) }</td>
+                          <td style="padding: 4px; white-space: nowrap;">{ show_double(stats1 correlationWith stats2) }</td>
                         }
                       }
                     </tr>
