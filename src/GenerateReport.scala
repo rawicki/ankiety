@@ -62,8 +62,9 @@ object GenerateReport {
   }
 
   def main(args: Array[String]){
-    def show_mean(s: Stats): String = {
-        "%2.3f (dev: %2.3f)" format(s.mean, s.dev)
+		import scala.xml._
+    def show_mean(s: Stats): NodeSeq = {
+        Seq(new Text(show_double(s.mean) + " "), <span style="font-size: 0.7em; white-space: nowrap">(dev: {show_double(s.dev)})</span>)
     }
     def show_double(d: Double): String = {
         "%2.3f" format d
