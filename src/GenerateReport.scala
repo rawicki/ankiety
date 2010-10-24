@@ -106,16 +106,6 @@ object GenerateReport {
           <div class="center">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
             <table>
-              <thead>
-                <tr>
-                  <th></th>
-                  {
-                    for((label2, _) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                      <th><div class="verticaltext">{ label2.slice(0,10) }</div></th>
-                    }
-                  }
-                </tr>
-              </thead>
               <tbody>
                 {
                   for((label1, stats1) <- statsByQuestion.sortBy(_._2.mean)) yield {
@@ -123,7 +113,7 @@ object GenerateReport {
                       <th>{ label1 }</th>
                       {
                         for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                          <td>{ show_double(stats1 correlationWith stats2) }</td>
+                          <td style="padding: 4px;">{ show_double(stats1 correlationWith stats2) }</td>
                         }
                       }
                     </tr>
