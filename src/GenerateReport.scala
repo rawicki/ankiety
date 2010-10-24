@@ -8,7 +8,7 @@ case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: L
       val values = xs.zip(s.xs)
       values.foldLeft(0: Double) {
         case (acc, (fst, snd)) => (fst-mean)*(snd-s.mean) + acc
-      } / (values.size * dev * dev)
+      } / (values.size * dev * s.dev)
   }
 }
 
