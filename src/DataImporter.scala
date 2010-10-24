@@ -22,7 +22,7 @@ object DataImporter {
 		}
 		def parsePerson(x: List[String]): Person = {
 			val id :: title :: name :: lastName :: unitCode :: unit :: Nil = x
-			Person(id, title, name, lastName, unitCode, unit)
+			Person(id, if (title == "") "(unknown)" else title, name, lastName, unitCode, unit)
 		}
 		def parseQuestion(x: List[String]): Question = {
 			val id :: order :: value :: Nil = x
