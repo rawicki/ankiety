@@ -1,4 +1,4 @@
-import java.io.FileWriter
+import java.io.{OutputStreamWriter, FileOutputStream}
 
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
@@ -69,7 +69,7 @@ object GenerateReport {
         "%2.3f" format d
     }
     val answers = DataImporter.readAnswers
-    val fw = new FileWriter("Report.html")
+    val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
     val statsByQuestion = GenerateReport.statsByQuestion(answers).toList
     val statsByTitle = GenerateReport.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)

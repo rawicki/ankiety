@@ -5,7 +5,7 @@ import surveys.SurveyClasses._
 
 object DataImporter {
   def openDataFileRaw(filename: String): List[List[String]] = {
-    val lines = Source.fromFile(filename).getLines
+    val lines = Source.fromFile(filename, "UTF-8").getLines
     lines.toList.map(_.split(';').toList)
   }
 
