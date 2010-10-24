@@ -3,3 +3,5 @@
 *.swp
 *.csv
 *.html
+/project/boot
+/target
