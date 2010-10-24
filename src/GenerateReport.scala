@@ -3,17 +3,24 @@ import java.io.FileWriter
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
 
-object GenerateReport {
-  case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int)
+case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Int]){
+  def correlationWith(s: Stats): Double = {
+      val values = xs.zip(s.xs)
+      values.foldLeft(0: Double) {
+        case (acc, (fst, snd)) => (fst-mean)*(snd-s.mean) + acc
+      } / (values.size * dev * dev)
+  }
+}
 
+object GenerateReport {
   def getStats(xss: List[Answer]): Stats = {
     val xs = xss map (_.value)
     val mean = (xs.sum: Double) / xs.size
     val variance = xs.foldLeft(0: Double) {
-      case (acc, x) => ((x-mean)*(x-mean): Double)/xs.size + acc
-    }
+      case (acc, x) => ((x-mean)*(x-mean): Double) + acc
+    }/xs.size
     val med = xs.sorted.apply(xs.size / 2)
-    Stats(mean, scala.math.sqrt(variance), med, xs.size)
+    Stats(mean, scala.math.sqrt(variance), med, xs.size, xs)
   }
 
   def personMeanAndDevation(xs: List[Answers]): Map[Person, Map[String, Stats]] = {
@@ -35,9 +42,11 @@ object GenerateReport {
   }
 
   def statsByQuestion(xs: List[Answers]): Map[String, Stats] = {
-    val answers: List[Answer] = xs flatMap (_.values)
-    val byQuestion: Map[String, List[Answer]] = answers groupBy (_.question.value)
-    byQuestion mapValues getStats
+    val answers: List[(String, Answer)] = xs flatMap (x => (x.values map (y => (x.id, y))))
+    val byQuestion: Map[String, List[(String, Answer)]] = answers groupBy (_._2.question.value)
+    byQuestion mapValues {
+      xs => getStats(xs.sortBy{_._1}.map{_._2})
+    }
   }
 
   def statsByPersonSubject(xs: List[Answers]): Map[(String, String), (Stats, Stats)] = {
@@ -56,9 +65,13 @@ object GenerateReport {
     def show_mean(s: Stats): String = {
         "%2.3f (dev: %2.3f)" format(s.mean, s.dev)
     }
+    def show_double(d: Double): String = {
+        "%2.3f" format d
+    }
     val answers = DataImporter.readAnswers
     val fw = new FileWriter("Report.html")
 
+    val statsByQuestion = GenerateReport.statsByQuestion(answers).toList
     val statsByTitle = GenerateReport.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
     val statsByPersonSubject = GenerateReport.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
     val report =
@@ -73,16 +86,46 @@ object GenerateReport {
             <h2>Średni wynik wg pytania</h2>
             <table>
               <thead>
-                <th>Pytanie</th>
-                <th>Średnia</th>
+                <tr>
+                  <th>Pytanie</th>
+                  <th>Średnia</th>
+                </tr>
               </thead>
               <tbody>
                 {
-                  val statsByQuestion = GenerateReport.statsByQuestion(answers).toList
                   for((label, stats) <- statsByQuestion.sortBy(_._2.mean)) yield {
                     <tr>
                     <th>{ label }</th>
                     <td>{ show_mean(stats) }</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="center">
+            <h2>Korelacja pomiędzy wynikami z pytań</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  {
+                    for((label2, _) <- statsByQuestion.sortBy(_._2.mean)) yield {
+                      <th><div class="verticaltext">{ label2.slice(0,10) }</div></th>
+                    }
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  for((label1, stats1) <- statsByQuestion.sortBy(_._2.mean)) yield {
+                    <tr>
+                      <th>{ label1 }</th>
+                      {
+                        for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield {
+                          <td>{ show_double(stats1 correlationWith stats2) }</td>
+                        }
+                      }
                     </tr>
                   }
                 }
