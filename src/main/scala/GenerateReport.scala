@@ -69,6 +69,11 @@ object GenerateReport {
     def show_double(d: Double): String = {
         "%2.3f" format d
     }
+		def dumpForSparkbar(s: Stats, domain: Seq[Int]): NodeSeq =
+			<span class="inlinesparkbar">{
+				val grouped = s.xs.groupBy(identity) mapValues (_.size)
+				(for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
+			}</span>
     val answers = DataImporter.readAnswers
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
@@ -80,6 +85,17 @@ object GenerateReport {
         <head>
           <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
           <link rel="stylesheet" type="text/css" href="templates/style.css"/>
+
+					<script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
+			    <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
+
+			    <script type="text/javascript">
+				    $(function() {{
+				        /* Use 'html' instead of an array of values to pass options
+				        to a sparkline with data in the tag */
+				        $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: 'blue'}});
+				    }});
+			    </script>
         </head>
         <body>
           <h1>Wyniki ankiet 2009Z</h1>
@@ -209,8 +225,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(questions) }</td>
-                      <td>{ show_mean(attendance) }</td>
+                      <td>{ show_mean(questions) }{ dumpForSparkbar(questions, 1 to 7) }</td>
+                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 5) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
@@ -236,8 +252,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(questions) }</td>
-                      <td>{ show_mean(attendance) }</td>
+                      <td>{ show_mean(questions) }{ dumpForSparkbar(questions, 1 to 7) }</td>
+                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 5) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
