@@ -78,11 +78,16 @@ object GenerateReport {
     def show_double(d: Double): String = {
         "%2.3f" format d
     }
-		def dumpForSparkbar(s: Stats, domain: Seq[Int]): NodeSeq =
-			<span class="inlinesparkbar">{
-				val grouped = s.xs.groupBy(identity) mapValues (_.size)
-				(for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
-			}</span>
+    def dumpForSparkbar(s: Stats, domain: Seq[Int]): NodeSeq =
+        <span class="inlinesparkbar">{
+            val grouped = s.xs.groupBy(identity) mapValues (_.size)
+            (for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
+        }</span>
+    def show_question_stats(s: Stats): NodeSeq =
+        show_mean(s) + dumpForSparkbar(s, 1 to 7)
+    def show_attendance_stats(s: Stats): NodeSeq =
+        show_mean(s) + dumpForSparkbar(s, 5 to 95 by 10)
+
     val answers = DataImporter.readAnswers
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
@@ -167,7 +172,7 @@ object GenerateReport {
                   <td>Pytania</td>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
-                      <td>{ show_mean(questions) }</td>
+                      <td>{ show_question_stats(questions) }</td>
                     }
                   }
                 </tr>
@@ -175,7 +180,7 @@ object GenerateReport {
                   <td>Obecności</td>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
-                      <td>{ show_mean(attendance) }</td>
+                      <td>{ show_attendance_stats(attendance) }</td>
                     }
                   }
                 </tr>
@@ -208,7 +213,7 @@ object GenerateReport {
                   <td>Pytania</td>
                   {
                     for((_, (attendance, questions)) <- statsByClassType) yield {
-                      <td>{ show_mean(questions) }</td>
+                      <td>{ show_question_stats(questions) }</td>
                     }
                   }
                 </tr>
@@ -216,7 +221,7 @@ object GenerateReport {
                   <td>Obecności</td>
                   {
                     for((_, (attendance, questions)) <- statsByClassType) yield {
-                      <td>{ show_mean(attendance) }</td>
+                      <td>{ show_attendance_stats(attendance) }</td>
                     }
                   }
                 </tr>
@@ -276,8 +281,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(questions) }{ dumpForSparkbar(questions, 1 to 7) }</td>
-                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 10) }</td>
+                      <td>{ show_question_stats(questions) }</td>
+                      <td>{ show_attendance_stats(attendance) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
@@ -303,8 +308,8 @@ object GenerateReport {
                     <tr>
                       <th>{ person }</th>
                       <td>{ subject }</td>
-                      <td>{ show_mean(questions) }{ dumpForSparkbar(questions, 1 to 7) }</td>
-                      <td>{ show_mean(attendance) }{ dumpForSparkbar(attendance, 5 to 95 by 10) }</td>
+                      <td>{ show_question_stats(questions) }</td>
+                      <td>{ show_attendance_stats(attendance) }</td>
                       <td>{ attendance.sample_size }</td>
                     </tr>
                   }
