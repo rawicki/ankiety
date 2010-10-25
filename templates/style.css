@@ -58,3 +58,21 @@ div.right {
     white-space:nowrap;
     border: 1px solid red;
 }
+
+a {
+    text-decoration: none;
+    color: gray;
+    border-bottom: 1px gray dotted;
+}
+
+tr.comments {
+    display: none;
+}
+
+span.comment {
+    background: #EAEAEA;
+    display: block;
+    margin: 7px 70px;
+    padding: 2px;
+    white-space: pre-wrap;
+}

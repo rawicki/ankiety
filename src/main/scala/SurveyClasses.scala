@@ -1,6 +1,8 @@
 package surveys.SurveyClasses
 
-case class Subject(period: String, code: String, description: String)
+case class Subject(period: String, code: String, description: String){
+  override def toString = description
+}
 
 case class Class(subject: Subject, id: String, code: String, description: String)
 

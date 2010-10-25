@@ -57,15 +57,17 @@ object StatsGenerator {
     }
   }
 
-  def statsByPersonSubject(xs: List[Answers]): Map[(String, String), (Stats, Stats)] = {
-    def to_str(p: Person): String = {
-        p.title + " " + p.name + " " + p.lastName
-    }
-    val byPersonSubject = xs groupBy (x => (to_str(x.person), x.clazz.subject.description))
+  def statsByPersonSubject(xs: List[Answers]): Map[(Person, Subject), (Stats, Stats)] = {
+    val byPersonSubject = xs groupBy (x => (x.person, x.clazz.subject))
     byPersonSubject mapValues { x =>
       val xs = x flatMap (_.values)
       val (quality, attendance) = xs partition (_.question.value.startsWith("Na ilu"))
       (getStats(quality), getStats(attendance))
     }
+  }
+
+  def getCommentsForPersonSubject(xs: List[Answers], person: Person, subject: Subject): List[String] = {
+    val xss = xs.filter(x => x.person == person && x.clazz.subject == subject)
+    xss.collect{ case Answers(_, _, _, _, Some(s)) => s }
   }
 }

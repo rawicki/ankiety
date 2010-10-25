@@ -6,6 +6,8 @@ import surveys.DataImporter.DataImporter
 import surveys.StatsGenerator.{Stats, StatsGenerator}
 
 object GenerateReport {
+  var next_tag_id: Int = 1
+
   def show_mean(s: Stats): NodeSeq =
       Seq(new Text(show_double(s.mean) + " "), <span style="font-size: 0.7em; white-space: nowrap">(dev: {show_double(s.dev)})</span>)
 
@@ -24,6 +26,23 @@ object GenerateReport {
   def show_attendance_stats(s: Stats): NodeSeq =
       show_mean(s) ++ dumpForSparkbar(s, 5 to 95 by 10)
 
+  def show_comments(comments: List[String]): NodeSeq =
+    Seq(<div class="comments">{
+      for(comment <- comments) yield Seq(<span class="comment">{ comment }</span>)
+    }</div>)
+
+  def show_comments_link(comments: List[String], id: String): NodeSeq =
+    if(comments.nonEmpty){
+        <a href="#" onClick={ "$(\"#comments-" ++ id ++ "\").toggle(); return(false);" }>
+          Pokaż({ comments.size })
+        </a>
+    } else { new Text("Brak") }
+
+  def getUniqueId(): Int = {
+    next_tag_id = next_tag_id + 1
+    next_tag_id
+  }
+
   def main(args: Array[String]){
     val answers = DataImporter.readAnswers
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
@@ -32,22 +51,55 @@ object GenerateReport {
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
     val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
+    def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
+      <table>
+        <thead>
+          <tr>
+            <th>Osoba</th>
+            <th>Przedmiot</th>
+            <th>Oceny</th>
+            <th>Obecność</th>
+            <th>Próbka</th>
+            <th>Komentarze</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            for(((person, subject), (attendance, questions)) <- xs) yield {
+              val comments = StatsGenerator.getCommentsForPersonSubject(answers, person, subject)
+              val comments_block_id = getUniqueId.toString
+              <tr>
+                <th>{ person }</th>
+                <td>{ subject }</td>
+                <td>{ show_mean(questions) }</td>
+                <td>{ show_mean(attendance) }</td>
+                <td>{ attendance.sample_size }</td>
+                <td>{ show_comments_link(comments, comments_block_id) }</td>
+              </tr>
+              <tr class="comments" id={ "comments-" ++ comments_block_id }>
+                <td colspan="6">
+                  { show_comments(comments) }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
     val report =
       <html>
         <head>
           <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
           <link rel="stylesheet" type="text/css" href="templates/style.css"/>
+          <script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
+          <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
 
-                    <script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
-                <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
-
-                <script type="text/javascript">
-                    $(function() {{
-                        /* Use 'html' instead of an array of values to pass options
-                        to a sparkline with data in the tag */
-                        $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: 'blue'}});
-                    }});
-                </script>
+          <script type="text/javascript">
+              $(function() {{
+                  /* Use 'html' instead of an array of values to pass options
+                  to a sparkline with data in the tag */
+                  $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: 'blue'}});
+              }});
+          </script>
         </head>
         <body>
           <h1>Wyniki ankiet 2009Z</h1>
@@ -176,84 +228,19 @@ object GenerateReport {
           </div>
           <div class="center">
             <h2>15 najlepszych wyników (osoba, przedmiot)</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Osoba</th>
-                  <th>Przedmiot</th>
-                  <th>Oceny</th>
-                  <th>Obecność</th>
-                  <th>Próbka</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  for(((person, subject), (attendance, questions)) <- statsByPersonSubject take 15) yield {
-                    <tr>
-                      <th>{ person }</th>
-                      <td>{ subject }</td>
-                      <td>{ show_mean(questions) }</td>
-                      <td>{ show_mean(attendance) }</td>
-                      <td>{ attendance.sample_size }</td>
-                    </tr>
-                  }
-                }
-              </tbody>
-            </table>
+            { show_per_person_stats(statsByPersonSubject take 15) }
           </div>
           <div class="center">
             <h2>15 najgorszych wyników (osoba, przedmiot)</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Osoba</th>
-                  <th>Przedmiot</th>
-                  <th>Oceny</th>
-                  <th>Obecność</th>
-                  <th>Próbka</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  for(((person, subject), (attendance, questions)) <- statsByPersonSubject.reverse take 15) yield {
-                    <tr>
-                      <th>{ person }</th>
-                      <td>{ subject }</td>
-                      <td>{ show_question_stats(questions) }</td>
-                      <td>{ show_attendance_stats(attendance) }</td>
-                      <td>{ attendance.sample_size }</td>
-                    </tr>
-                  }
-                }
-              </tbody>
-            </table>
+            { show_per_person_stats(statsByPersonSubject.reverse take 15) }
           </div>
           <div class="center">
             <h2>15 najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Osoba</th>
-                  <th>Przedmiot</th>
-                  <th>Oceny</th>
-                  <th>Obecność</th>
-                  <th>Próbka</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  for(((person, subject), (attendance, questions)) <- statsByPersonSubject.sortBy(-_._2._2.dev) take 15) yield {
-                    <tr>
-                      <th>{ person }</th>
-                      <td>{ subject }</td>
-                      <td>{ show_question_stats(questions) }</td>
-                      <td>{ show_attendance_stats(attendance) }</td>
-                      <td>{ attendance.sample_size }</td>
-                    </tr>
-                  }
-                }
-              </tbody>
-            </table>
+            { show_per_person_stats(statsByPersonSubject.sortBy(-_._2._2.dev) take 15) }
+          </div>
+          <div class="center">
+            <h2>15 najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
+            { show_per_person_stats(statsByPersonSubject.sortBy(_._2._1.mean) take 15) }
           </div>
         </body>
       </html>
