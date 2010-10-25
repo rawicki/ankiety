@@ -9,7 +9,7 @@ object GenerateReport {
   var next_tag_id: Int = 1
 
   def show_mean(s: Stats): NodeSeq =
-      <span style="white-space: nowrap">{show_double(s.mean)} <span style="font-size: 0.7em">(dev: {show_double(s.dev)})</span></span>
+      <span style="white-space: nowrap">{show_double(s.mean)} <span style="font-size: 0.7em" title="Odchylenie standardowe">(dev: {show_double(s.dev)})</span></span>
 
   def show_double(d: Double): String =
       "%2.3f" format d
@@ -58,7 +58,7 @@ object GenerateReport {
             <th>Osoba</th>
             <th>Przedmiot</th>
             <th>Oceny</th>
-            <th>Obecność</th>
+            <th>Obecność (%)</th>
             <th>Próbka</th>
             <th>Komentarze</th>
           </tr>
@@ -167,7 +167,7 @@ object GenerateReport {
                   }
                 </tr>
                 <tr>
-                  <td>Obecności</td>
+                  <td>Obecności (%)</td>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
                       <td>{ show_attendance_stats(attendance) }</td>
@@ -208,7 +208,7 @@ object GenerateReport {
                   }
                 </tr>
                 <tr>
-                  <td>Obecności</td>
+                  <td>Obecności (%)</td>
                   {
                     for((_, (attendance, questions)) <- statsByClassType) yield {
                       <td>{ show_attendance_stats(attendance) }</td>
