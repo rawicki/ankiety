@@ -44,7 +44,7 @@ object GenerateReport {
   }
 
   def main(args: Array[String]){
-    val answers = DataImporter.readAnswers
+    val answers = DataImporter.readAnswers(args contains "md5")
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList

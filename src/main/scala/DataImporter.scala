@@ -9,12 +9,18 @@ object DataImporter {
     lines.toList.map(_.split(';').toList)
   }
 
-  def readAnswers: List[Answers] = {
+  def readAnswers(hash: Boolean): List[Answers] = {
 		val rawAnswers = openDataFileRaw("ankiety.csv")
 		val rawComments = openDataFileRaw("komentarze.csv")
+		def md5(x: String, limit: Int = 5): String =
+			if (hash) {
+				val md5 = java.security.MessageDigest.getInstance("MD5");
+				md5.update(x.getBytes());
+				md5.digest().map(0xFF & _).map { "%02x".format(_) }.foldLeft(""){_ + _} take limit
+			} else x
 		def parseSubject(x: List[String]): Subject = {
 			val period :: code :: description :: Nil = x
-			Subject(period, code, description)
+			Subject(period, code, md5(description))
 		}
 		def parseClass(subject: Subject, x: List[String]): Class = {
 			val id :: code :: description :: Nil = x
@@ -22,7 +28,7 @@ object DataImporter {
 		}
 		def parsePerson(x: List[String]): Person = {
 			val id :: title :: name :: lastName :: unitCode :: unit :: Nil = x
-			Person(id, if (title == "") "(unknown)" else title, name, lastName, unitCode, unit)
+			Person(id, if (title == "") "(unknown)" else title, md5(name), md5(lastName), unitCode, unit)
 		}
 		def parseQuestion(x: List[String]): Question = {
 			val id :: order :: value :: Nil = x
@@ -49,7 +55,7 @@ object DataImporter {
 		}).toMap
 		val comments: Map[String, String] = (for (x <- rawComments) yield {
 			val value :: id :: Nil = x drop 12
-			id -> value
+			id -> md5(value, 50)
 		}).toMap
 		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- rawAnswers) yield {
             val (rawSubject, rest1) = x splitAt 3
