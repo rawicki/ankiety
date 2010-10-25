@@ -1,116 +1,53 @@
 import java.io.{OutputStreamWriter, FileOutputStream}
+import scala.xml._
 
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
-
-case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Int]){
-  def correlationWith(s: Stats): Double = {
-      val values = xs.zip(s.xs)
-      values.foldLeft(0: Double) {
-        case (acc, (fst, snd)) => (fst-mean)*(snd-s.mean) + acc
-      } / (values.size * dev * s.dev)
-  }
-}
+import surveys.StatsGenerator.{Stats, StatsGenerator}
 
 object GenerateReport {
-  def getStats(xss: List[Answer]): Stats = {
-    val xs = xss map (_.value)
-    val mean = (xs.sum: Double) / xs.size
-    val variance = xs.foldLeft(0: Double) {
-      case (acc, x) => ((x-mean)*(x-mean): Double) + acc
-    }/xs.size
-    val med = xs.sorted.apply(xs.size / 2)
-    Stats(mean, scala.math.sqrt(variance), med, xs.size, xs)
-  }
+  def show_mean(s: Stats): NodeSeq =
+      Seq(new Text(show_double(s.mean) + " "), <span style="font-size: 0.7em; white-space: nowrap">(dev: {show_double(s.dev)})</span>)
 
-  def personMeanAndDevation(xs: List[Answers]): Map[Person, Map[String, Stats]] = {
-    val perPerson: Map[Person, List[Answers]] = xs groupBy (_.person)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val questions: Map[String, List[Answer]] = answers groupBy (_.question.value)
-      questions mapValues getStats
-    }
-  }
+  def show_double(d: Double): String =
+      "%2.3f" format d
 
-  def statsByClassType(xs: List[Answers]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Answers]] = xs groupBy (_.clazz.code)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
-  }
+  def dumpForSparkbar(s: Stats, domain: Seq[Int]): NodeSeq =
+      <span class="inlinesparkbar">{
+          val grouped = s.xs.groupBy(identity) mapValues (_.size)
+          (for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
+      }</span>
 
-  def statsByTitle(xs: List[Answers]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Answers]] = xs groupBy (_.person.title)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
-  }
+  def show_question_stats(s: Stats): NodeSeq =
+      show_mean(s) ++ dumpForSparkbar(s, 1 to 7)
 
-  def statsByQuestion(xs: List[Answers]): Map[String, Stats] = {
-    val answers: List[(String, Answer)] = xs flatMap (x => (x.values map (y => (x.id, y))))
-    val byQuestion: Map[String, List[(String, Answer)]] = answers groupBy (_._2.question.value)
-    byQuestion mapValues {
-      xs => getStats(xs.sortBy{_._1}.map{_._2})
-    }
-  }
-
-  def statsByPersonSubject(xs: List[Answers]): Map[(String, String), (Stats, Stats)] = {
-    def to_str(p: Person): String = {
-        p.title + " " + p.name + " " + p.lastName
-    }
-    val byPersonSubject = xs groupBy (x => (to_str(x.person), x.clazz.subject.description))
-    byPersonSubject mapValues { x =>
-      val xs = x flatMap (_.values)
-      val (quality, attendance) = xs partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
-  }
+  def show_attendance_stats(s: Stats): NodeSeq =
+      show_mean(s) ++ dumpForSparkbar(s, 5 to 95 by 10)
 
   def main(args: Array[String]){
-		import scala.xml._
-    def show_mean(s: Stats): NodeSeq = {
-        Seq(new Text(show_double(s.mean) + " "), <span style="font-size: 0.7em; white-space: nowrap">(dev: {show_double(s.dev)})</span>)
-    }
-    def show_double(d: Double): String = {
-        "%2.3f" format d
-    }
-    def dumpForSparkbar(s: Stats, domain: Seq[Int]): NodeSeq =
-        <span class="inlinesparkbar">{
-            val grouped = s.xs.groupBy(identity) mapValues (_.size)
-            (for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
-        }</span>
-    def show_question_stats(s: Stats): NodeSeq =
-        show_mean(s) + dumpForSparkbar(s, 1 to 7)
-    def show_attendance_stats(s: Stats): NodeSeq =
-        show_mean(s) + dumpForSparkbar(s, 5 to 95 by 10)
-
     val answers = DataImporter.readAnswers
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
-    val statsByQuestion = GenerateReport.statsByQuestion(answers).toList
-    val statsByClassType = GenerateReport.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
-    val statsByTitle = GenerateReport.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
-    val statsByPersonSubject = GenerateReport.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
+    val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
+    val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
+    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
+    val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
     val report =
       <html>
         <head>
           <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
           <link rel="stylesheet" type="text/css" href="templates/style.css"/>
 
-					<script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
-			    <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
+                    <script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
+                <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
 
-			    <script type="text/javascript">
-				    $(function() {{
-				        /* Use 'html' instead of an array of values to pass options
-				        to a sparkline with data in the tag */
-				        $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: 'blue'}});
-				    }});
-			    </script>
+                <script type="text/javascript">
+                    $(function() {{
+                        /* Use 'html' instead of an array of values to pass options
+                        to a sparkline with data in the tag */
+                        $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: 'blue'}});
+                    }});
+                </script>
         </head>
         <body>
           <h1>Wyniki ankiet 2009Z</h1>
