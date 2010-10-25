@@ -9,7 +9,7 @@ object GenerateReport {
   var next_tag_id: Int = 1
 
   def show_mean(s: Stats): NodeSeq =
-      Seq(new Text(show_double(s.mean) + " "), <span style="font-size: 0.7em; white-space: nowrap">(dev: {show_double(s.dev)})</span>)
+      <span style="white-space: nowrap">{show_double(s.mean)} <span style="font-size: 0.7em">(dev: {show_double(s.dev)})</span></span>
 
   def show_double(d: Double): String =
       "%2.3f" format d
@@ -71,8 +71,8 @@ object GenerateReport {
               <tr>
                 <th>{ person }</th>
                 <td>{ subject }</td>
-                <td>{ show_mean(questions) }</td>
-                <td>{ show_mean(attendance) }</td>
+                <td>{ show_question_stats(questions) }</td>
+                <td>{ show_attendance_stats(attendance) }</td>
                 <td>{ attendance.sample_size }</td>
                 <td>{ show_comments_link(comments, comments_block_id) }</td>
               </tr>
