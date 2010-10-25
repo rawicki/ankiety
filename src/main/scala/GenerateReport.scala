@@ -32,6 +32,15 @@ object GenerateReport {
     }
   }
 
+  def statsByClassType(xs: List[Answers]): Map[String, (Stats, Stats)] = {
+    val perPerson: Map[String, List[Answers]] = xs groupBy (_.clazz.code)
+    perPerson mapValues { xs =>
+      val answers: List[Answer] = xs flatMap (_.values)
+      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
+      (getStats(quality), getStats(attendance))
+    }
+  }
+
   def statsByTitle(xs: List[Answers]): Map[String, (Stats, Stats)] = {
     val perPerson: Map[String, List[Answers]] = xs groupBy (_.person.title)
     perPerson mapValues { xs =>
@@ -78,6 +87,7 @@ object GenerateReport {
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
     val statsByQuestion = GenerateReport.statsByQuestion(answers).toList
+    val statsByClassType = GenerateReport.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
     val statsByTitle = GenerateReport.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
     val statsByPersonSubject = GenerateReport.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
     val report =
@@ -173,6 +183,47 @@ object GenerateReport {
                   <td>Ile próbek</td>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
+                      <td>{ attendance.sample_size }</td>
+                    }
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="center">
+            <h2>Sredni wynik dla wszystkich pytań wg. typu zajęć</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>X</th>
+                    {
+                      for((label, _) <- statsByClassType) yield {
+                        <th>{ label }</th>
+                      }
+                    }
+                  </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Pytania</td>
+                  {
+                    for((_, (attendance, questions)) <- statsByClassType) yield {
+                      <td>{ show_mean(questions) }</td>
+                    }
+                  }
+                </tr>
+                <tr>
+                  <td>Obecności</td>
+                  {
+                    for((_, (attendance, questions)) <- statsByClassType) yield {
+                      <td>{ show_mean(attendance) }</td>
+                    }
+                  }
+                </tr>
+                <tr>
+                  <td>Ile próbek</td>
+                  {
+                    for((_, (attendance, questions)) <- statsByClassType) yield {
                       <td>{ attendance.sample_size }</td>
                     }
                   }
