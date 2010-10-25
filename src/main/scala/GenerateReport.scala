@@ -145,7 +145,7 @@ object GenerateReport {
             </table>
           </div>
           <div class="center">
-            <h2>Sredni wynik dla wszystkich pytań wg. tytułu</h2>
+            <h2>Średni wynik dla wszystkich pytań wg. tytułu</h2>
             <table>
               <thead>
                 <tr>
@@ -186,7 +186,7 @@ object GenerateReport {
             </table>
           </div>
           <div class="center">
-            <h2>Sredni wynik dla wszystkich pytań wg. typu zajęć</h2>
+            <h2>Średni wynik dla wszystkich pytań wg. typu zajęć</h2>
             <table>
               <thead>
                 <tr>
