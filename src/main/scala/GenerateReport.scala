@@ -51,6 +51,7 @@ object GenerateReport {
         </head>
         <body>
           <h1>Wyniki ankiet 2009Z</h1>
+          <h3>(wypełnionych ankiet: {answers.size})</h3>
           <div class="center">
             <h2>Średni wynik wg pytania</h2>
             <table>
