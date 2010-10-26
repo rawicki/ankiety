@@ -9,7 +9,10 @@ object GenerateReport {
   var next_tag_id: Int = 1
 
   def show_mean(s: Stats): NodeSeq =
-      <span style="white-space: nowrap">{show_double(s.mean)} <span style="font-size: 0.7em" title="Odchylenie standardowe">(dev: {show_double(s.dev)})</span></span>
+      <span style="white-space: nowrap">
+        {show_double(s.mean)}
+        <span style="font-size: 0.7em" title="Odchylenie standardowe">(&sigma;: {show_double(s.dev)})</span>
+      </span>
 
   def show_double(d: Double): String =
       "%2.3f" format d
@@ -161,7 +164,7 @@ object GenerateReport {
               </thead>
               <tbody>
                 <tr>
-                  <td>Pytania</td>
+                  <th>Pytania</th>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
                       <td>{ show_question_stats(questions) }</td>
@@ -169,7 +172,7 @@ object GenerateReport {
                   }
                 </tr>
                 <tr>
-                  <td>Obecności (%)</td>
+                  <th>Obecności (%)</th>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
                       <td>{ show_attendance_stats(attendance) }</td>
@@ -177,7 +180,7 @@ object GenerateReport {
                   }
                 </tr>
                 <tr>
-                  <td>Ile próbek</td>
+                  <th>Ile próbek</th>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
                       <td>{ attendance.sample_size }</td>
@@ -202,7 +205,7 @@ object GenerateReport {
               </thead>
               <tbody>
                 <tr>
-                  <td>Pytania</td>
+                  <th>Pytania</th>
                   {
                     for((_, (attendance, questions)) <- statsByClassType) yield {
                       <td>{ show_question_stats(questions) }</td>
@@ -210,7 +213,7 @@ object GenerateReport {
                   }
                 </tr>
                 <tr>
-                  <td>Obecności (%)</td>
+                  <th>Obecności (%)</th>
                   {
                     for((_, (attendance, questions)) <- statsByClassType) yield {
                       <td>{ show_attendance_stats(attendance) }</td>
@@ -218,7 +221,7 @@ object GenerateReport {
                   }
                 </tr>
                 <tr>
-                  <td>Ile próbek</td>
+                  <th>Ile próbek</th>
                   {
                     for((_, (attendance, questions)) <- statsByClassType) yield {
                       <td>{ attendance.sample_size }</td>
