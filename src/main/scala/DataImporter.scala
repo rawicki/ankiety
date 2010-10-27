@@ -9,15 +9,18 @@ object DataImporter {
     lines.toList.map(_.split(';').toList)
   }
 
-  def readAnswers(hash: Boolean): List[Answers] = {
+  def readAnswers(hashSeed: Option[Int]): List[Answers] = {
 		val rawAnswers = openDataFileRaw("ankiety.csv")
 		val rawComments = openDataFileRaw("komentarze.csv")
-		def md5(x: String, limit: Int = 5): String =
-			if (hash) {
+		def md5(x: String, limit: Int = 5): String = hashSeed match {
+			case Some(seed) => {
 				val md5 = java.security.MessageDigest.getInstance("MD5");
-				md5.update(x.getBytes());
+				md5.update(seed.toString.getBytes())
+				md5.update(x.getBytes())
 				md5.digest().map(0xFF & _).map { "%02x".format(_) }.foldLeft(""){_ + _} take limit
-			} else x
+			}
+			case None => x
+		}
 		def parseSubject(x: List[String]): Subject = {
 			val period :: code :: description :: Nil = x
 			Subject(period, code, md5(description))

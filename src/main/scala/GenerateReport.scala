@@ -47,7 +47,13 @@ object GenerateReport {
   }
 
   def main(args: Array[String]){
-    val answers = DataImporter.readAnswers(args contains "md5")
+		val seed = if (args contains "md5") Some(scala.util.Random.nextInt) else None
+    seed foreach { x =>
+      val fw = new OutputStreamWriter(new FileOutputStream("seed_KEEP_SECRET.txt"), "UTF-8")
+      fw.write(x.toString)
+      fw.close()
+    }
+    val answers = DataImporter.readAnswers(seed)
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
