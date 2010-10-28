@@ -53,11 +53,11 @@ object GenerateReport {
       fw.write(x.toString)
       fw.close()
     }
-    val answers = DataImporter.readAnswers(seed)
+    val answers = DataImporter.readSurveys(seed)
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
     def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
-    val answersByQuestion: Map[String, Set[Answers]] = toMultiMap(for {
+    val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
       as <- answers
       a <- as.values
     } yield (a.question.value, as))

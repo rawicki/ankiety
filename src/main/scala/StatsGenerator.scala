@@ -22,8 +22,8 @@ object StatsGenerator {
     Stats(mean, scala.math.sqrt(variance), med, xs.size, xs)
   }
 
-  def personMeanAndDevation(xs: List[Answers]): Map[Person, Map[String, Stats]] = {
-    val perPerson: Map[Person, List[Answers]] = xs groupBy (_.person)
+  def personMeanAndDevation(xs: List[Survey]): Map[Person, Map[String, Stats]] = {
+    val perPerson: Map[Person, List[Survey]] = xs groupBy (_.person)
     perPerson mapValues { xs =>
       val answers: List[Answer] = xs flatMap (_.values)
       val questions: Map[String, List[Answer]] = answers groupBy (_.question.value)
@@ -31,8 +31,8 @@ object StatsGenerator {
     }
   }
 
-  def statsByClassType(xs: List[Answers]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Answers]] = xs groupBy (_.clazz.code)
+  def statsByClassType(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+    val perPerson: Map[String, List[Survey]] = xs groupBy (_.clazz.code)
     perPerson mapValues { xs =>
       val answers: List[Answer] = xs flatMap (_.values)
       val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
@@ -40,8 +40,8 @@ object StatsGenerator {
     }
   }
 
-  def statsByTitle(xs: List[Answers]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Answers]] = xs groupBy (_.person.title)
+  def statsByTitle(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+    val perPerson: Map[String, List[Survey]] = xs groupBy (_.person.title)
     perPerson mapValues { xs =>
       val answers: List[Answer] = xs flatMap (_.values)
       val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
@@ -49,7 +49,7 @@ object StatsGenerator {
     }
   }
 
-  def statsByQuestion(xs: List[Answers]): Map[String, Stats] = {
+  def statsByQuestion(xs: List[Survey]): Map[String, Stats] = {
     val answers: List[(String, Answer)] = xs flatMap (x => (x.values map (y => (x.id, y))))
     val byQuestion: Map[String, List[(String, Answer)]] = answers groupBy (_._2.question.value)
     byQuestion mapValues {
@@ -57,7 +57,7 @@ object StatsGenerator {
     }
   }
 
-  def statsByPersonSubject(xs: List[Answers]): Map[(Person, Subject), (Stats, Stats)] = {
+  def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), (Stats, Stats)] = {
     val byPersonSubject = xs groupBy (x => (x.person, x.clazz.subject))
     byPersonSubject mapValues { x =>
       val xs = x flatMap (_.values)
@@ -66,8 +66,8 @@ object StatsGenerator {
     }
   }
 
-  def getCommentsForPersonSubject(xs: List[Answers], person: Person, subject: Subject): List[String] = {
+  def getCommentsForPersonSubject(xs: List[Survey], person: Person, subject: Subject): List[String] = {
     val xss = xs.filter(x => x.person == person && x.clazz.subject == subject)
-    xss.collect{ case Answers(_, _, _, _, Some(s)) => s }
+    xss.collect{ case Survey(_, _, _, _, Some(s)) => s }
   }
 }

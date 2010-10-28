@@ -9,8 +9,8 @@ object DataImporter {
     lines.toList.map(_.split(';').toList)
   }
 
-  def readAnswers(hashSeed: Option[Int]): List[Answers] = {
-		val rawAnswers = openDataFileRaw("ankiety.csv")
+  def readSurveys(hashSeed: Option[Int]): List[Survey] = {
+		val rawSurvey = openDataFileRaw("ankiety.csv")
 		val rawComments = openDataFileRaw("komentarze.csv")
 		def md5(x: String, limit: Int = 5): String = hashSeed match {
 			case Some(seed) => {
@@ -41,16 +41,16 @@ object DataImporter {
 			val value :: description :: Nil = x
 			Answer(question, value.toInt, description)
 		}
-		val questions: Map[String, Question] = (for (x <- rawAnswers) yield {
+		val questions: Map[String, Question] = (for (x <- rawSurvey) yield {
 			val (rawQuestion, _) = (x drop 12) splitAt 3
 			val q = parseQuestion(rawQuestion)
 			q.id -> q
 		}).toMap
-		val subjects: Map[String, Subject] = (for (x <- rawAnswers) yield {
+		val subjects: Map[String, Subject] = (for (x <- rawSurvey) yield {
 			val subject = parseSubject(x take 3)
 			subject.code -> subject
 		}).toMap
-		val classes: Map[String, Class] = (for (x <- rawAnswers) yield {
+		val classes: Map[String, Class] = (for (x <- rawSurvey) yield {
 			val (_ :: code :: _ :: Nil, rest1) = x splitAt 3
 			val (rawClass, _) = rest1 splitAt 3
 			val clazz = parseClass(subjects(code), rawClass)
@@ -60,7 +60,7 @@ object DataImporter {
 			val value :: id :: Nil = x drop 12
 			id -> md5(value, 50)
 		}).toMap
-		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- rawAnswers) yield {
+		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- rawSurvey) yield {
             val (rawSubject, rest1) = x splitAt 3
 			val (rawClass, rest2) = rest1 splitAt 3
 			val (rawPerson, rest3) = rest2 splitAt 6
@@ -72,10 +72,10 @@ object DataImporter {
 		}
     val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
         (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
-    val answers: List[Answers] = (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
+    val surveys: List[Survey] = (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
         val comment = comments get sheetId
-        Answers(sheetId, clazz, person, answers, comment)
+        Survey(sheetId, clazz, person, answers, comment)
     }).toList
-		answers
+		surveys
   }
 }
