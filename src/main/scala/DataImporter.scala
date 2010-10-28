@@ -70,12 +70,12 @@ object DataImporter {
             val answer = parseAnswer(question, rawAnswer)
 			((sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson)), answer)
 		}
-        val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
-            (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
-        val answers: List[Answers] = (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
-            val comment = comments get sheetId
-            Answers(sheetId, clazz, person, answers, comment)
-        }).toList
+    val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
+        (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
+    val answers: List[Answers] = (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
+        val comment = comments get sheetId
+        Answers(sheetId, clazz, person, answers, comment)
+    }).toList
 		answers
   }
 }
