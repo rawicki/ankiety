@@ -56,6 +56,16 @@ object GenerateReport {
     val answers = DataImporter.readAnswers(seed)
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
+    def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
+    val answersByQuestion: Map[String, Set[Answers]] = toMultiMap(for {
+      as <- answers
+      a <- as.values
+    } yield (a.question.value, as))
+    val questions = answersByQuestion.keys.toList
+    val matrix = for {
+      q1 <- questions
+      q2 <- questions
+    } yield (q1, q2, answersByQuestion(q1) intersect answersByQuestion(q2))
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
