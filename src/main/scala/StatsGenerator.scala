@@ -49,6 +49,28 @@ object StatsGenerator {
     }
   }
 
+  def statsByPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+    val perPerson: Map[String, List[Survey]] = xs groupBy (_.person.position)
+    perPerson mapValues { xs =>
+      val answers: List[Answer] = xs flatMap (_.values)
+      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
+      (getStats(quality), getStats(attendance))
+    }
+  }
+
+  def statsByAggregatedPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+    var map: Map[String, String] = Map()
+    List("doktorant informatyka", "doktorant matematyka") foreach { map += _ -> "doktoranci" }
+    List("wykładowca", "starszy wykładowca", "docent") foreach { map += _ -> "pracownicy dydaktyczni" }
+    List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący") foreach { map += _ -> "pracownicy naukowo-dydaktyczni" }
+    val perPerson: Map[String, List[Survey]] = xs groupBy (x => try map apply x.person.position catch { case _ => "inne" })
+    perPerson mapValues { xs =>
+      val answers: List[Answer] = xs flatMap (_.values)
+      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
+      (getStats(quality), getStats(attendance))
+    }
+  }
+
   def statsByQuestion(xs: List[Survey]): Map[String, Stats] = {
     val answers: List[(String, Answer)] = xs flatMap (x => (x.values map (y => (x.id, y))))
     val byQuestion: Map[String, List[(String, Answer)]] = answers groupBy (_._2.question.value)

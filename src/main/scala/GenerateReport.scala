@@ -68,7 +68,9 @@ object GenerateReport {
     } yield (q1, q2, answersByQuestion(q1) intersect answersByQuestion(q2))
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
-    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
+    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
+    val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
+    val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
     val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
     def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
       <table>
@@ -199,6 +201,88 @@ object GenerateReport {
                   <th>Ile próbek</th>
                   {
                     for((_, (attendance, questions)) <- statsByTitle) yield {
+                      <td>{ attendance.sample_size }</td>
+                    }
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="center">
+            <h2>Średni wynik dla wszystkich pytań wg rodzaju stanowiska</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>X</th>
+                    {
+                      for((label, _) <- statsByAggregatedPosition) yield {
+                        <th>{ label }</th>
+                      }
+                    }
+                  </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Pytania</th>
+                  {
+                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield {
+                      <td>{ show_question_stats(questions) }</td>
+                    }
+                  }
+                </tr>
+                <tr>
+                  <th>Obecności (%)</th>
+                  {
+                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield {
+                      <td>{ show_attendance_stats(attendance) }</td>
+                    }
+                  }
+                </tr>
+                <tr>
+                  <th>Ile próbek</th>
+                  {
+                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield {
+                      <td>{ attendance.sample_size }</td>
+                    }
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h2>Średni wynik dla wszystkich pytań wg stanowiska</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>X</th>
+                    {
+                      for((label, _) <- statsByPosition) yield {
+                        <th>{ label }</th>
+                      }
+                    }
+                  </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Pytania</th>
+                  {
+                    for((_, (attendance, questions)) <- statsByPosition) yield {
+                      <td>{ show_question_stats(questions) }</td>
+                    }
+                  }
+                </tr>
+                <tr>
+                  <th>Obecności (%)</th>
+                  {
+                    for((_, (attendance, questions)) <- statsByPosition) yield {
+                      <td>{ show_attendance_stats(attendance) }</td>
+                    }
+                  }
+                </tr>
+                <tr>
+                  <th>Ile próbek</th>
+                  {
+                    for((_, (attendance, questions)) <- statsByPosition) yield {
                       <td>{ attendance.sample_size }</td>
                     }
                   }
