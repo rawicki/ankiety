@@ -11,6 +11,7 @@ object DataImporter {
 
   def readSurveys(hashSalt: Option[Int]): List[Survey] = {
 		val rawSurvey = openDataFileRaw("ankiety.csv")
+		val rawPositions = openDataFileRaw("stanowiska.csv")
 		val rawComments = openDataFileRaw("komentarze.csv")
 		def md5(x: String, limit: Int = 5): String = hashSalt match {
 			case Some(salt) => {
@@ -29,9 +30,28 @@ object DataImporter {
 			val id :: code :: description :: Nil = x
 			Class(subject, id, code, description)
 		}
-		def parsePerson(x: List[String]): Person = {
-			val id :: title :: name :: lastName :: unitCode :: unit :: Nil = x
-			Person(id, if (title == "") "(unknown)" else title, md5(name), md5(lastName), unitCode, unit)
+		def parsePosition(x: List[String]): Position = {
+			val id :: name:: lastName :: position :: rest = x
+			val opt_unit = if (rest == Nil) None
+				else { val unit :: Nil = rest; Option(unit) }
+			Position(id, md5(name), md5(lastName), position, opt_unit)
+		}
+		def parsePerson(x: List[String], positions: Map[String, Position]): Person = {
+			val id :: rawTitle :: name :: lastName :: unitCode :: unit :: Nil = x
+			val title = if (rawTitle == "") "(brak)" else rawTitle
+			positions get id match {
+				case Some(Position(_, p_name, p_lastName, position, opt_unit)) =>
+					if (name != p_name) println("parsePerson: name mismatch: \"" ++ name ++ "\" != \"" ++ p_name ++ "\" (id " ++ id ++ ")")
+					if (lastName != p_lastName) println("parsePerson: lastName mismatch: \"" ++ lastName ++ "\" != \"" ++ p_lastName ++ "\" (id " ++ id ++ ")")
+					opt_unit match {
+						case Some(p_unit) =>
+							if (unit != p_unit) println("parsePerson: unit mismatch: \"" ++ unit ++ "\" != \"" ++ p_unit ++ "\" (id " ++ id ++ ")")
+						case None =>
+					}
+					Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
+				case None =>
+					Person(id, title, md5(name), md5(lastName), unitCode, unit, "(brak)")
+			}
 		}
 		def parseQuestion(x: List[String]): Question = {
 			val id :: order :: value :: Nil = x
@@ -56,6 +76,10 @@ object DataImporter {
 			val clazz = parseClass(subjects(code), rawClass)
 			clazz.id -> clazz
 		}).toMap
+		val positions: Map[String, Position] = (for (x <- rawPositions) yield {
+			val position = parsePosition(x take 5)
+			position.id -> position
+		}).toMap
 		val comments: Map[String, String] = (for (x <- rawComments) yield {
 			val value :: id :: Nil = x drop 12
 			id -> md5(value, 50)
@@ -68,7 +92,7 @@ object DataImporter {
 			val (rawAnswer, sheetId :: Nil) = rest4 splitAt 2
             val question = parseQuestion(rawQuestion)
             val answer = parseAnswer(question, rawAnswer)
-			((sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson)), answer)
+			((sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson, positions)), answer)
 		}
     val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
         (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))

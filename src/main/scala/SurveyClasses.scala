@@ -6,7 +6,9 @@ case class Subject(period: String, code: String, description: String){
 
 case class Class(subject: Subject, id: String, code: String, description: String)
 
-case class Person(id: String, title: String, name: String, lastName: String, unitCode: String, unit: String){
+case class Position(id: String, name: String, lastName: String, position: String, unit: Option[String])
+
+case class Person(id: String, title: String, name: String, lastName: String, unitCode: String, unit: String, position: String){
   override def toString = { title ++ " " ++ name ++ " " ++ lastName }
 }
 
