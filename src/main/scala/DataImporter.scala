@@ -50,6 +50,7 @@ object DataImporter {
 					}
 					Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
 				case None =>
+					println("parsePerson: no position for \"" ++ title ++ " " ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
 					Person(id, title, md5(name), md5(lastName), unitCode, unit, "(brak)")
 			}
 		}
