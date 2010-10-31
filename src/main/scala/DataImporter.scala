@@ -9,13 +9,13 @@ object DataImporter {
     lines.toList.map(_.split(';').toList)
   }
 
-  def readSurveys(hashSeed: Option[Int]): List[Survey] = {
+  def readSurveys(hashSalt: Option[Int]): List[Survey] = {
 		val rawSurvey = openDataFileRaw("ankiety.csv")
 		val rawComments = openDataFileRaw("komentarze.csv")
-		def md5(x: String, limit: Int = 5): String = hashSeed match {
-			case Some(seed) => {
+		def md5(x: String, limit: Int = 5): String = hashSalt match {
+			case Some(salt) => {
 				val md5 = java.security.MessageDigest.getInstance("MD5");
-				md5.update(seed.toString.getBytes())
+				md5.update(salt.toString.getBytes())
 				md5.update(x.getBytes())
 				md5.digest().map(0xFF & _).map { "%02x".format(_) }.foldLeft(""){_ + _} take limit
 			}

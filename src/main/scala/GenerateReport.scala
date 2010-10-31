@@ -47,13 +47,13 @@ object GenerateReport {
   }
 
   def main(args: Array[String]){
-		val seed = if (args contains "md5") Some(scala.util.Random.nextInt) else None
-    seed foreach { x =>
-      val fw = new OutputStreamWriter(new FileOutputStream("seed_KEEP_SECRET.txt"), "UTF-8")
+		val salt = if (args contains "md5") Some(scala.util.Random.nextInt) else None
+    salt foreach { x =>
+      val fw = new OutputStreamWriter(new FileOutputStream("salt_KEEP_SECRET.txt"), "UTF-8")
       fw.write(x.toString)
       fw.close()
     }
-    val answers = DataImporter.readSurveys(seed)
+    val answers = DataImporter.readSurveys(salt)
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
 
     def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
