@@ -17,3 +17,8 @@ case class Question(id: String, order: String, value: String){
 case class Answer(question: Question, value: Int, description: String)
 
 case class Survey(id: String, clazz: Class, person: Person, values: List[Answer], comment: Option[String])
+
+/**
+ * Class that has columns and rows indexed by labels but can have missing value for given cell.
+ **/
+case class PartialMatrix[T](labels: List[String], values: Map[(String, String), T])

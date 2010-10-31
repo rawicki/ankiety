@@ -41,6 +41,21 @@ object GenerateReport {
         </a>
     } else { new Text("Brak") }
 
+  def showPartialMatrix[T](m: PartialMatrix[T], default: NodeSeq)(f: T => NodeSeq): NodeSeq = {
+    <table>
+      <tbody>{
+        for (label1 <- m.labels) yield
+          <tr>
+            <th>{label1}</th>
+            {
+              for (label2 <- m.labels) yield
+                <td style="padding: 4px; white-space: nowrap;">{m.values.get(label1 -> label2).map(f).getOrElse(default)}</td>
+            }
+          </tr>
+      }</tbody>
+    </table>
+  }
+
   def getUniqueId(): Int = {
     next_tag_id = next_tag_id + 1
     next_tag_id
@@ -55,21 +70,11 @@ object GenerateReport {
     }
     val answers = DataImporter.readSurveys(salt)
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
-
-    def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
-    val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
-      as <- answers
-      a <- as.values
-    } yield (a.question.value, as))
-    val questions = answersByQuestion.keys.toList
-    val matrix = for {
-      q1 <- questions
-      q2 <- questions
-    } yield (q1, q2, answersByQuestion(q1) intersect answersByQuestion(q2))
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 50)
     val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
+    val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
     def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
       <table>
         <thead>
@@ -148,22 +153,11 @@ object GenerateReport {
           </div>
           <div class="center">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
-            <table>
-              <tbody>
-                {
-                  for((label1, stats1) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                    <tr>
-                      <th>{ label1 }</th>
-                      {
-                        for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                          <td style="padding: 4px; white-space: nowrap;">{ show_double(stats1 correlationWith stats2) }</td>
-                        }
-                      }
-                    </tr>
-                  }
-                }
-              </tbody>
-            </table>
+            {
+              showPartialMatrix(statsByQuestionMatrix, new Text("-")) {
+                case (stats1, stats2) => new Text(show_double(stats1 correlationWith stats2))
+              }
+            }
           </div>
           <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg. tytułu</h2>
