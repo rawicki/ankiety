@@ -38,7 +38,11 @@ object DataImporter {
 		}
 		def parsePerson(x: List[String], positions: Map[String, Position]): Person = {
 			val id :: rawTitle :: name :: lastName :: unitCode :: unit :: Nil = x
-			val title = if (rawTitle == "") "(brak)" else rawTitle
+			val title = if (rawTitle == "")
+			{
+				println("parsePerson: no title for \"" ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
+				"(brak lub nieznany)"
+			} else rawTitle
 			positions get id match {
 				case Some(Position(_, p_name, p_lastName, position, opt_unit)) =>
 					if (name != p_name) println("parsePerson: name mismatch: \"" ++ name ++ "\" != \"" ++ p_name ++ "\" (id " ++ id ++ ")")
