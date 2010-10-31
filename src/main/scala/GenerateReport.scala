@@ -41,18 +41,29 @@ object GenerateReport {
         </a>
     } else { new Text("Brak") }
 
-  def showPartialMatrix[T](m: PartialMatrix[T], default: NodeSeq)(f: T => NodeSeq): NodeSeq = {
+  def showPartialMatrix[T](m: PartialMatrix[T], default: NodeSeq, triangleOnly: Boolean = false)(f: T => NodeSeq): NodeSeq = {
     <table>
-      <tbody>{
-        for (label1 <- m.labels) yield
-          <tr>
-            <th>{label1}</th>
-            {
-              for (label2 <- m.labels) yield
-                <td style="padding: 4px; white-space: nowrap;">{m.values.get(label1 -> label2).map(f).getOrElse(default)}</td>
-            }
-          </tr>
-      }</tbody>
+      <tbody>
+        <tr>
+          <td>&nbsp;</td>
+          {
+            for ((_, index) <- m.labels.zipWithIndex) yield <th style="font-size: 0.6em">{"(" + index + ")"}</th>
+          }
+        </tr>
+        {
+          for ((label1, index1) <- m.labels.zipWithIndex) yield
+            <tr>
+              <th>{label1} <span style="font-size: 0.6em">({index1})</span></th>
+              {
+                for ((label2, index2) <- m.labels.zipWithIndex) yield
+                  if (index1 < index2 && triangleOnly)
+                    new Text(" ")
+                  else
+                    <td style="padding: 4px; white-space: nowrap;">{m.values.get(label1 -> label2).map(f).getOrElse(default)}</td>
+              }
+            </tr>
+        }
+      </tbody>
     </table>
   }
 
@@ -154,8 +165,14 @@ object GenerateReport {
           <div class="center">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
             {
-              showPartialMatrix(statsByQuestionMatrix, new Text("-")) {
-                case (stats1, stats2) => new Text(show_double(stats1 correlationWith stats2))
+              showPartialMatrix(statsByQuestionMatrix, new Text("-"), true) {
+                case (stats1, stats2) => {
+                  val cor = stats1 correlationWith stats2
+                  if (cor < 0.75 || cor > 0.99)
+                    <span style="color: gray">{show_double(cor)}</span>
+                  else
+                    new Text(show_double(cor))
+                }
               }
             }
           </div>
