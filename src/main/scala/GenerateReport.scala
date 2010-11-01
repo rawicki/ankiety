@@ -41,6 +41,32 @@ object GenerateReport {
         </a>
     } else { new Text("Brak") }
 
+  def showPartialMatrix[T](m: PartialMatrix[T], default: NodeSeq, triangleOnly: Boolean = false)(f: T => NodeSeq): NodeSeq = {
+    <table>
+      <tbody>
+        <tr>
+          <td>&nbsp;</td>
+          {
+            for ((_, index) <- m.labels.zipWithIndex) yield <th style="font-size: 0.6em">{"(" + index + ")"}</th>
+          }
+        </tr>
+        {
+          for ((label1, index1) <- m.labels.zipWithIndex) yield
+            <tr>
+              <th>{label1} <span style="font-size: 0.6em">({index1})</span></th>
+              {
+                for ((label2, index2) <- m.labels.zipWithIndex) yield
+                  if (index1 < index2 && triangleOnly)
+                    new Text(" ")
+                  else
+                    <td style="padding: 4px; white-space: nowrap;">{m.values.get(label1 -> label2).map(f).getOrElse(default)}</td>
+              }
+            </tr>
+        }
+      </tbody>
+    </table>
+  }
+
   def getUniqueId(): Int = {
     next_tag_id = next_tag_id + 1
     next_tag_id
@@ -55,23 +81,13 @@ object GenerateReport {
     }
     val answers = DataImporter.readSurveys(salt)
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
-
-    def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
-    val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
-      as <- answers
-      a <- as.values
-    } yield (a.question.value, as))
-    val questions = answersByQuestion.keys.toList
-    val matrix = for {
-      q1 <- questions
-      q2 <- questions
-    } yield (q1, q2, answersByQuestion(q1) intersect answersByQuestion(q2))
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
     val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
     val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
     val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
+    val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
     def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
       <table>
         <thead>
@@ -150,22 +166,17 @@ object GenerateReport {
           </div>
           <div class="center">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
-            <table>
-              <tbody>
-                {
-                  for((label1, stats1) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                    <tr>
-                      <th>{ label1 }</th>
-                      {
-                        for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield {
-                          <td style="padding: 4px; white-space: nowrap;">{ show_double(stats1 correlationWith stats2) }</td>
-                        }
-                      }
-                    </tr>
-                  }
+            {
+              showPartialMatrix(statsByQuestionMatrix, new Text("-"), true) {
+                case (stats1, stats2) => {
+                  val cor = stats1 correlationWith stats2
+                  if (cor < 0.75 || cor > 0.99)
+                    <span style="color: gray">{show_double(cor)}</span>
+                  else
+                    new Text(show_double(cor))
                 }
-              </tbody>
-            </table>
+              }
+            }
           </div>
           <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg stopnia lub tytułu naukowego</h2>
