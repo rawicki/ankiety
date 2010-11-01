@@ -44,7 +44,7 @@ object DataImporter {
 			{
 				warnOnce("parsePerson: no title for \"" ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
 				"(brak)"
-			} else rawTitle
+			} else if (rawTitle == "prof. dr hab.") "prof." else rawTitle
 			val position = positions get id match {
 				case Some(Position(_, p_name, p_lastName, p_position, opt_unit)) =>
 					if (name != p_name) warnOnce("parsePerson: name mismatch: \"" ++ name ++ "\" != \"" ++ p_name ++ "\" (id " ++ id ++ ")")
