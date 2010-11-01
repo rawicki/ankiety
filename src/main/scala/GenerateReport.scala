@@ -83,10 +83,10 @@ object GenerateReport {
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
-    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
-    val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
-    val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 5) // było 50
-    val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size > 7)
+    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size >= 50)
+    val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size >= 50)
+    val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size >= 50)
+    val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean).filter(_._2._1.sample_size >= 7)
     val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
     def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
       <table>
