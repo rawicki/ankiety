@@ -36,27 +36,25 @@ object DataImporter {
 				else { val unit :: Nil = rest; Option(unit) }
 			Position(id, md5(name), md5(lastName), position, opt_unit)
 		}
+		var printedWarnings: Set[String] = Set();
+		def warnOnce(x: String): Unit = { if (!(printedWarnings contains x)) { println(x); printedWarnings += x } }
 		def parsePerson(x: List[String], positions: Map[String, Position]): Person = {
 			val id :: rawTitle :: name :: lastName :: unitCode :: unit :: Nil = x
 			val title = if (rawTitle == "")
 			{
-				println("parsePerson: no title for \"" ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
-				"(brak lub nieznany)"
+				warnOnce("parsePerson: no title for \"" ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
+				"(brak)"
 			} else rawTitle
-			positions get id match {
-				case Some(Position(_, p_name, p_lastName, position, opt_unit)) =>
-					if (name != p_name) println("parsePerson: name mismatch: \"" ++ name ++ "\" != \"" ++ p_name ++ "\" (id " ++ id ++ ")")
-					if (lastName != p_lastName) println("parsePerson: lastName mismatch: \"" ++ lastName ++ "\" != \"" ++ p_lastName ++ "\" (id " ++ id ++ ")")
-					opt_unit match {
-						case Some(p_unit) =>
-							if (unit != p_unit) println("parsePerson: unit mismatch: \"" ++ unit ++ "\" != \"" ++ p_unit ++ "\" (id " ++ id ++ ")")
-						case None =>
-					}
-					Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
+			val position = positions get id match {
+				case Some(Position(_, p_name, p_lastName, p_position, opt_unit)) =>
+					if (name != p_name) warnOnce("parsePerson: name mismatch: \"" ++ name ++ "\" != \"" ++ p_name ++ "\" (id " ++ id ++ ")")
+					if (lastName != p_lastName) warnOnce("parsePerson: lastName mismatch: \"" ++ lastName ++ "\" != \"" ++ p_lastName ++ "\" (id " ++ id ++ ")")
+					p_position
 				case None =>
-					println("parsePerson: no position for \"" ++ title ++ " " ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
-					Person(id, title, md5(name), md5(lastName), unitCode, unit, "(brak)")
+					warnOnce("parsePerson: no position for \"" ++ title ++ " " ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
+					"(brak)"
 			}
+			Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
 		}
 		def parseQuestion(x: List[String]): Question = {
 			val id :: order :: value :: Nil = x
