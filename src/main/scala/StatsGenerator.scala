@@ -4,6 +4,7 @@ import surveys.SurveyClasses._
 
 case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Int]){
   def correlationWith(s: Stats): Double = {
+      assert(sample_size == s.sample_size)
       val values = xs.zip(s.xs)
       values.foldLeft(0: Double) {
         case (acc, (fst, snd)) => (fst-mean)*(snd-s.mean) + acc
@@ -87,6 +88,26 @@ object StatsGenerator {
       val (quality, attendance) = xs partition (_.question.value.startsWith("Na ilu"))
       (getStats(quality), getStats(attendance))
     }
+  }
+
+  def statsByQuestionMatrix(xs: List[Survey]): PartialMatrix[(Stats, Stats)] = {
+    def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
+    def statsByQuestion(q: String, xs: List[Survey]): Stats = {
+      val answers = for (x <- xs; a <- x.values if a.question.value == q) yield a
+      getStats(answers)
+    }
+    val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
+      as <- xs
+      a <- as.values
+    } yield (a.question.value, as))
+    val questions = answersByQuestion.keys.toList
+    val values = for {
+      q1 <- questions
+      q2 <- questions
+      val surveys = (answersByQuestion(q1) intersect answersByQuestion(q2)).toList
+      if surveys != Nil
+    } yield (q1, q2) -> (statsByQuestion(q1, surveys), statsByQuestion(q2, surveys))
+    PartialMatrix(questions, values.toMap)
   }
 
   def getCommentsForPersonSubject(xs: List[Survey], person: Person, subject: Subject): List[String] = {
