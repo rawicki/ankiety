@@ -61,7 +61,7 @@ object StatsGenerator {
 
   def statsByAggregatedPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
     val map: Map[String, String] = (
-      List("doktorant informatyka", "doktorant matematyka").map(_ -> "doktoranci" ) ++
+      List("doktorant informatyka", "doktorant matematyka", "doktorant MISDoMP").map(_ -> "doktoranci" ) ++
       List("wykładowca", "starszy wykładowca", "docent").map(_ -> "pracownicy dydaktyczni") ++
       List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący").map(_ -> "pracownicy naukowo-dydaktyczni")
     ).toMap
