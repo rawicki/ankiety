@@ -59,11 +59,12 @@ object StatsGenerator {
   }
 
   def statsByAggregatedPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
-    var map: Map[String, String] = Map()
-    List("doktorant informatyka", "doktorant matematyka") foreach { map += _ -> "doktoranci" }
-    List("wykładowca", "starszy wykładowca", "docent") foreach { map += _ -> "pracownicy dydaktyczni" }
-    List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący") foreach { map += _ -> "pracownicy naukowo-dydaktyczni" }
-    val perPerson: Map[String, List[Survey]] = xs groupBy (x => try map apply x.person.position catch { case _ => "inne" })
+    val map: Map[String, String] = (
+      List("doktorant informatyka", "doktorant matematyka").map(_ -> "doktoranci" ) ++
+      List("wykładowca", "starszy wykładowca", "docent").map(_ -> "pracownicy dydaktyczni") ++
+      List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący").map(_ -> "pracownicy naukowo-dydaktyczni")
+    ).toMap
+    val perPerson: Map[String, List[Survey]] = xs groupBy (x => map getOrElse(x.person.position, "inne"))
     perPerson mapValues { xs =>
       val answers: List[Answer] = xs flatMap (_.values)
       val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
