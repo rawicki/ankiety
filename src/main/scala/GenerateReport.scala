@@ -138,12 +138,11 @@ object GenerateReport {
               </thead>
               <tbody>
                 {
-                  for((label, stats) <- statsByQuestion.sortBy(_._2.mean)) yield {
+                  for((label, stats) <- statsByQuestion.sortBy(_._2.mean)) yield
                     <tr>
                     <th>{ label }</th>
                     <td>{ show_mean(stats) }</td>
                     </tr>
-                  }
                 }
               </tbody>
             </table>
@@ -153,16 +152,14 @@ object GenerateReport {
             <table>
               <tbody>
                 {
-                  for((label1, stats1) <- statsByQuestion.sortBy(_._2.mean)) yield {
+                  for((label1, stats1) <- statsByQuestion.sortBy(_._2.mean)) yield
                     <tr>
                       <th>{ label1 }</th>
                       {
-                        for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield {
+                        for((label2, stats2) <- statsByQuestion.sortBy(_._2.mean)) yield
                           <td style="padding: 4px; white-space: nowrap;">{ show_double(stats1 correlationWith stats2) }</td>
-                        }
                       }
                     </tr>
-                  }
                 }
               </tbody>
             </table>
@@ -174,9 +171,8 @@ object GenerateReport {
                 <tr>
                   <th>X</th>
                     {
-                      for((label, _) <- statsByTitle) yield {
+                      for((label, _) <- statsByTitle) yield
                         <th>{ label }</th>
-                      }
                     }
                   </tr>
               </thead>
@@ -184,25 +180,23 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByTitle) yield {
+                    for((_, (attendance, questions)) <- statsByTitle) yield
                       <td>{ show_question_stats(questions) }</td>
-                    }
+
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByTitle) yield {
+                    for((_, (attendance, questions)) <- statsByTitle) yield
                       <td>{ show_attendance_stats(attendance) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByTitle) yield {
+                    for((_, (attendance, questions)) <- statsByTitle) yield
                       <td>{ attendance.sample_size }</td>
-                    }
                   }
                 </tr>
               </tbody>
@@ -215,9 +209,8 @@ object GenerateReport {
                 <tr>
                   <th>X</th>
                     {
-                      for((label, _) <- statsByAggregatedPosition) yield {
+                      for((label, _) <- statsByAggregatedPosition) yield
                         <th>{ label }</th>
-                      }
                     }
                   </tr>
               </thead>
@@ -225,25 +218,22 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield {
+                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield
                       <td>{ show_question_stats(questions) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield {
+                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield
                       <td>{ show_attendance_stats(attendance) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield {
+                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield
                       <td>{ attendance.sample_size }</td>
-                    }
                   }
                 </tr>
               </tbody>
@@ -256,9 +246,8 @@ object GenerateReport {
                 <tr>
                   <th>X</th>
                     {
-                      for((label, _) <- statsByPosition) yield {
+                      for((label, _) <- statsByPosition) yield
                         <th>{ label }</th>
-                      }
                     }
                   </tr>
               </thead>
@@ -266,25 +255,22 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByPosition) yield {
+                    for((_, (attendance, questions)) <- statsByPosition) yield
                       <td>{ show_question_stats(questions) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByPosition) yield {
+                    for((_, (attendance, questions)) <- statsByPosition) yield
                       <td>{ show_attendance_stats(attendance) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByPosition) yield {
+                    for((_, (attendance, questions)) <- statsByPosition) yield
                       <td>{ attendance.sample_size }</td>
-                    }
                   }
                 </tr>
               </tbody>
@@ -297,9 +283,8 @@ object GenerateReport {
                 <tr>
                   <th>X</th>
                     {
-                      for((label, _) <- statsByClassType) yield {
+                      for((label, _) <- statsByClassType) yield
                         <th>{ label }</th>
-                      }
                     }
                   </tr>
               </thead>
@@ -307,25 +292,22 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByClassType) yield {
+                    for((_, (attendance, questions)) <- statsByClassType) yield
                       <td>{ show_question_stats(questions) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByClassType) yield {
+                    for((_, (attendance, questions)) <- statsByClassType) yield
                       <td>{ show_attendance_stats(attendance) }</td>
-                    }
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByClassType) yield {
+                    for((_, (attendance, questions)) <- statsByClassType) yield
                       <td>{ attendance.sample_size }</td>
-                    }
                   }
                 </tr>
               </tbody>
