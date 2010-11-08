@@ -79,7 +79,7 @@ object GenerateReport {
       fw.write(x.toString)
       fw.close()
     }
-    val answers = DataImporter.readSurveys(salt)
+    val answers = (new DataImporter(salt)).readSurveys
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)

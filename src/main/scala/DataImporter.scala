@@ -3,43 +3,77 @@ package surveys.DataImporter
 import scala.io.Source
 import surveys.SurveyClasses._
 
-object DataImporter {
-  def openDataFileRaw(filename: String): List[List[String]] = {
-    val lines = Source.fromFile(filename, "UTF-8").getLines
-    lines.toList.map(_.split(';').toList)
+class DataImporter(hashSalt: Option[Int]) {
+  def openDataFileRaw(filename: String): (Vector[String], List[Vector[String]]) = {
+    val reader = new com.csvreader.CsvReader(filename, ';', java.nio.charset.Charset.forName("UTF-8"))
+    reader.readHeaders
+    val headers = Vector(reader.getHeaders: _*)
+    val data = new scala.collection.mutable.ListBuffer[Vector[String]]
+    while (reader.readRecord())
+      data.append(Vector(reader.getValues: _*))
+    headers -> data.toList
   }
 
-  def readSurveys(hashSalt: Option[Int]): List[Survey] = {
-		val rawSurvey = openDataFileRaw("ankiety.csv")
-		val rawPositions = openDataFileRaw("stanowiska.csv")
-		val rawComments = openDataFileRaw("komentarze.csv")
-		def md5(x: String, limit: Int = 5): String = hashSalt match {
-			case Some(salt) => {
-				val md5 = java.security.MessageDigest.getInstance("MD5");
-				md5.update(salt.toString.getBytes())
-				md5.update(x.getBytes())
-				md5.digest().map(0xFF & _).map { "%02x".format(_) }.foldLeft(""){_ + _} take limit
-			}
-			case None => x
+  def md5(x: String, limit: Int = 5): String = hashSalt match {
+		case Some(salt) => {
+			val md5 = java.security.MessageDigest.getInstance("MD5");
+			md5.update(salt.toString.getBytes())
+			md5.update(x.getBytes())
+			md5.digest().map(0xFF & _).map { "%02x".format(_) }.foldLeft(""){_ + _} take limit
 		}
-		def parseSubject(x: List[String]): Subject = {
-			val period :: code :: description :: Nil = x
-			Subject(period, code, md5(description))
-		}
-		def parseClass(subject: Subject, x: List[String]): Class = {
-			val id :: code :: description :: Nil = x
-			Class(subject, id, code, description)
-		}
-		def parsePosition(x: List[String]): Position = {
-			val id :: name:: lastName :: position :: rest = x
-			val opt_unit = if (rest == Nil) None
-				else { val unit :: Nil = rest; Option(unit) }
-			Position(id, md5(name), md5(lastName), position, opt_unit)
-		}
+		case None => x
+	}
+
+	private class Reader(filename: String) {
+	  val (headers, records) = {
+	    val (rawHeaders, records) = openDataFileRaw(filename)
+	    rawHeaders.zipWithIndex.toMap -> records
+	  }
+	  def extract(x: Vector[String], name: String): String = x(headers(name))
+		def extractOpt(x: Vector[String], name: String): Option[String] = (x.lift)(headers(name))
+	}
+
+  private object SurveyReader extends Reader("ankiety.csv") {
+    def read(comments: Map[String, String], positions: Map[String, Position]): List[Survey] = {
+  		val questions: Map[String, Question] = (for (x <- records) yield {
+  			val q = parseQuestion(x)
+  			q.id -> q
+  		}).toMap
+  		val subjects: Map[String, Subject] = (for (x <- records) yield {
+  			val subject = parseSubject(x)
+  			subject.code -> subject
+  		}).toMap
+  		val classes: Map[String, Class] = (for (x <- records) yield {
+  			val clazz = parseClass(subjects(extract(x, "kod przedmiotu")), x)
+  			clazz.id -> clazz
+  		}).toMap
+  		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- records) yield {
+  		  val sheetId = extract(x, "kod kartki")
+        val question = parseQuestion(x)
+        val answer = parseAnswer(question, x)
+  			((sheetId, parseClass(parseSubject(x), x), parsePerson(x, positions)), answer)
+  		}
+      val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
+          (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
+      (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
+          val comment = comments get sheetId
+          Survey(sheetId, clazz, person, answers, comment)
+      }).toList
+    }
+
+    def parseSubject(x: Vector[String]): Subject =
+			Subject(extract(x, "cykl dydaktyczny"), extract(x, "kod przedmiotu"), md5(extract(x, "nazwa przedmiotu")))
+		def parseClass(subject: Subject, x: Vector[String]): Class =
+			Class(subject, extract(x, "id zajęć"), extract(x, "kod zajęć"), extract(x, "opis zajęć"))
 		var printedWarnings: Set[String] = Set();
-		def warnOnce(x: String): Unit = { if (!(printedWarnings contains x)) { println(x); printedWarnings += x } }
-		def parsePerson(x: List[String], positions: Map[String, Position]): Person = {
-			val id :: rawTitle :: name :: lastName :: unitCode :: unit :: Nil = x
+  	def warnOnce(x: String): Unit = { if (!(printedWarnings contains x)) { println(x); printedWarnings += x } }
+		def parsePerson(x: Vector[String], positions: Map[String, Position]): Person = {
+		  val rawTitle = extract(x, "tytul")
+		  val id = extract(x, "id osoby")
+		  val name = extract(x, "imie")
+		  val lastName = extract(x, "nazwisko")
+		  val unitCode = extract(x, "kod jednostki")
+		  val unit = extract(x, "jednostka")
 			val title = if (rawTitle == "")
 			{
 				warnOnce("parsePerson: no title for \"" ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
@@ -56,53 +90,33 @@ object DataImporter {
 			}
 			Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
 		}
-		def parseQuestion(x: List[String]): Question = {
-			val id :: order :: value :: Nil = x
-			Question(id, order, value)
+		def parseQuestion(x: Vector[String]): Question =
+  		Question(extract(x, "id pytania"), extract(x, "kolejność"), extract(x, "treść pytania"))
+		def parseAnswer(question: Question, x: Vector[String]): Answer =
+			Answer(question, extract(x, "wartość odpowiedzi").toInt, extract(x, "opis odpowiedzi"))
+  }
+
+  private object PositionsReader extends Reader("stanowiska.csv") {
+    def parsePosition(x: Vector[String]): Position = {
+			Position(extract(x, "id osoby"), md5(extract(x, "imie")), md5(extract(x, "nazwisko")), extract(x, "stanowisko"), extractOpt(x, "jednostka"))
 		}
-		def parseAnswer(question: Question, x: List[String]): Answer = {
-			val value :: description :: Nil = x
-			Answer(question, value.toInt, description)
-		}
-		val questions: Map[String, Question] = (for (x <- rawSurvey) yield {
-			val (rawQuestion, _) = (x drop 12) splitAt 3
-			val q = parseQuestion(rawQuestion)
-			q.id -> q
-		}).toMap
-		val subjects: Map[String, Subject] = (for (x <- rawSurvey) yield {
-			val subject = parseSubject(x take 3)
-			subject.code -> subject
-		}).toMap
-		val classes: Map[String, Class] = (for (x <- rawSurvey) yield {
-			val (_ :: code :: _ :: Nil, rest1) = x splitAt 3
-			val (rawClass, _) = rest1 splitAt 3
-			val clazz = parseClass(subjects(code), rawClass)
-			clazz.id -> clazz
-		}).toMap
-		val positions: Map[String, Position] = (for (x <- rawPositions) yield {
-			val position = parsePosition(x take 5)
-			position.id -> position
-		}).toMap
-		val comments: Map[String, String] = (for (x <- rawComments) yield {
-			val value :: id :: Nil = x drop 12
-			id -> md5(value, 50)
-		}).toMap
-		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- rawSurvey) yield {
-            val (rawSubject, rest1) = x splitAt 3
-			val (rawClass, rest2) = rest1 splitAt 3
-			val (rawPerson, rest3) = rest2 splitAt 6
-			val (rawQuestion, rest4) = rest3 splitAt 3
-			val (rawAnswer, sheetId :: Nil) = rest4 splitAt 2
-            val question = parseQuestion(rawQuestion)
-            val answer = parseAnswer(question, rawAnswer)
-			((sheetId, parseClass(parseSubject(rawSubject), rawClass), parsePerson(rawPerson, positions)), answer)
-		}
-    val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
-        (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
-    val surveys: List[Survey] = (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
-        val comment = comments get sheetId
-        Survey(sheetId, clazz, person, answers, comment)
-    }).toList
-		surveys
+    def read: Map[String, Position] = {
+      (for (x <- records) yield {
+  			val position = parsePosition(x)
+  			position.id -> position
+  		}).toMap
+    }
+  }
+
+  private object CommentsReader extends Reader("komentarze.csv") {
+    def read: Map[String, String] = {
+      (for (x <- records) yield {
+  			extract(x, "kod kartki") -> md5(extract(x, "treść komentarza"), 50)
+  		}).toMap
+    }
+  }
+
+  def readSurveys: List[Survey] = {
+    SurveyReader.read(CommentsReader.read, PositionsReader.read)
   }
 }
