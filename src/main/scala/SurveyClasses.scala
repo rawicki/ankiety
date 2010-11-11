@@ -12,7 +12,9 @@ case class Person(id: String, title: String, name: String, lastName: String, uni
   override def toString = { title ++ " " ++ name ++ " " ++ lastName }
 }
 
-case class Question(id: String, order: String, value: String){
+case class QuestionStats(allowed: Int, filled: Int)
+
+case class Question(id: String, order: String, value: String, stats: QuestionStats) {
   override def toString = { value ++ " - " ++ order }
 }
 

@@ -1,0 +1,3 @@
+"cykl dydaktyczny";"kod przedmiotu";"nazwa przedmiotu";"id zajęć";"kod zajęć";"opis zajęć";"id osoby";"tytul";"imie";"nazwisko";"kod jednostki";"jednostka";"id pytania";"kolejność";"treść pytania";"wartość";"opis odpowiedzi";"odp_na_wartosc";"odp_na_pytanie";"udzial_wart_w_pytaniu";"uprawnieni";"udzial_wartosci_w_uprawnionych"
+"08/09Z";"PRZ-01";"Przedmiot 1";"1";"CW";"Ćwiczenia";"123";"dr";"Marek";"Kowalski";"UJ.WPA";"Wydział Prawa i Administracji";"1";"1";"Czy prowadzący był punktualny?";"1";"tak";"6";"24";"25%";"60";"10%"
+"08/09Z";"PRZ-01";"Przedmiot 1";"1";"CW";"Ćwiczenia";"123";"dr";"Marek";"Kowalski";"UJ.WPA";"Wydział Prawa i Administracji";"2";"2";"Na ilu zajęciach byłeś(aś)? (przybliżony procent)";"15";"11-20%";"6";"24";"25%";"60";"10%"

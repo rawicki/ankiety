@@ -33,11 +33,14 @@ class DataImporter(hashSalt: Option[Int]) {
 		def extractOpt(x: Vector[String], name: String): Option[String] = (x.lift)(headers(name))
 	}
 
-  private object SurveyReader extends Reader("ankiety.csv") {
+  private object SurveyReader extends Reader("przyklad_1000-2009z_zajecia_wszystko.csv") {
+    val questionStats = QuestionStatsReader.read
     def read(comments: Map[String, String], positions: Map[String, Position]): List[Survey] = {
-  		val questions: Map[String, Question] = (for (x <- records) yield {
-  			val q = parseQuestion(x)
-  			q.id -> q
+      val questions: Map[String, Question] = (for (x <- records) yield {
+        val personId = extract(x, "id osoby")
+        val classId = extract(x, "id zajęć")
+        val questionId = extract(x, "id pytania")
+        questionId -> parseQuestion(x, questionStats((personId, classId, questionId)))
   		}).toMap
   		val subjects: Map[String, Subject] = (for (x <- records) yield {
   			val subject = parseSubject(x)
@@ -49,7 +52,10 @@ class DataImporter(hashSalt: Option[Int]) {
   		}).toMap
   		val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- records) yield {
   		  val sheetId = extract(x, "kod kartki")
-        val question = parseQuestion(x)
+  		  val personId = extract(x, "id osoby")
+  		  val classId = extract(x, "id zajęć")
+  		  val questionId = extract(x, "id pytania")
+        val question = parseQuestion(x, questionStats((personId, classId, questionId)))
         val answer = parseAnswer(question, x)
   			((sheetId, parseClass(parseSubject(x), x), parsePerson(x, positions)), answer)
   		}
@@ -90,8 +96,10 @@ class DataImporter(hashSalt: Option[Int]) {
 			}
 			Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
 		}
-		def parseQuestion(x: Vector[String]): Question =
-  		Question(extract(x, "id pytania"), extract(x, "kolejność"), extract(x, "treść pytania"))
+		def parseQuestion(x: Vector[String], stats: QuestionStats): Question = {
+		  val id = extract(x, "id pytania")
+  		Question(id, extract(x, "kolejność"), extract(x, "treść pytania"), stats)
+  	}
 		def parseAnswer(question: Question, x: Vector[String]): Answer =
 			Answer(question, extract(x, "wartość odpowiedzi").toInt, extract(x, "opis odpowiedzi"))
   }
@@ -108,10 +116,18 @@ class DataImporter(hashSalt: Option[Int]) {
     }
   }
 
-  private object CommentsReader extends Reader("komentarze.csv") {
+  private object CommentsReader extends Reader("przyklad_1000-2009z_zajecia_komentarze.csv") {
     def read: Map[String, String] = {
       (for (x <- records) yield {
   			extract(x, "kod kartki") -> md5(extract(x, "treść komentarza"), 50)
+  		}).toMap
+    }
+  }
+
+  private object QuestionStatsReader extends Reader("przyklad_1000-2009z_zajecia_grupuj_prowadzacy.csv") {
+    def read: Map[(String, String, String), QuestionStats] = {
+      (for (x <- records) yield {
+        (extract(x, "id osoby"), extract(x, "id zajęć"), extract(x, "id pytania")) -> QuestionStats(extract(x, "uprawnieni").toInt, extract(x, "odp_na_pytanie").toInt)
   		}).toMap
     }
   }

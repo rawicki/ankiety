@@ -4,4 +4,6 @@
 *.csv
 *.html
 /project/boot
+/project/build/target
 /target
+!przyklad*.csv
