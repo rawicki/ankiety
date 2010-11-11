@@ -2,7 +2,7 @@ package surveys.StatsGenerator
 
 import surveys.SurveyClasses._
 
-case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Int]){
+case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Int]) {
   def correlationWith(s: Stats): Double = {
       assert(sample_size == s.sample_size)
       val values = xs.zip(s.xs)
@@ -12,16 +12,35 @@ case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: L
   }
 }
 
+case class DoubleStats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Double]) {
+  def correlationWith(s: DoubleStats): Double = {
+      assert(sample_size == s.sample_size)
+      val values = xs.zip(s.xs)
+      values.foldLeft(0: Double) {
+        case (acc, (fst, snd)) => (fst-mean)*(snd-s.mean) + acc
+      } / (values.size * dev * s.dev)
+  }
+}
+
 object StatsGenerator {
-  def getStats(xss: List[Answer]): Stats = {
-    val xs = xss map (_.value)
-    val mean = (xs.sum: Double) / xs.size
-    val variance = xs.foldLeft(0: Double) {
-      case (acc, x) => ((x-mean)*(x-mean): Double) + acc
+  def stats(xs: List[Int]): Stats = {
+    val xds = xs map (_.toDouble)
+    val mean = xds.sum / xs.size
+    val variance = xds.foldLeft(0: Double) {
+      case (acc, x) => (x-mean)*(x-mean) + acc
     }/xs.size
-    val med = xs.sorted.apply(xs.size / 2)
+    val med = xds.sorted.apply(xs.size / 2)
     Stats(mean, scala.math.sqrt(variance), med, xs.size, xs)
   }
+  def doubleStats(xs: List[Double]): DoubleStats = {
+    val mean = xs.sum / xs.size
+    val variance = xs.foldLeft(0: Double) {
+      case (acc, x) => (x-mean)*(x-mean) + acc
+    }/xs.size
+    val med = xs.sorted.apply(xs.size / 2)
+    DoubleStats(mean, scala.math.sqrt(variance), med, xs.size, xs)
+  }
+  def getStats(xs: List[Answer]): Stats = stats(xs map (_.value))
 
   def personMeanAndDevation(xs: List[Survey]): Map[Person, Map[String, Stats]] = {
     val perPerson: Map[Person, List[Survey]] = xs groupBy (_.person)
@@ -85,8 +104,8 @@ object StatsGenerator {
     val byPersonSubject = xs groupBy (x => (x.person, x.clazz.subject))
     byPersonSubject mapValues { x =>
       val xs = x flatMap (_.values)
-      val (quality, attendance) = xs partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
+      val (attendance, quality) = xs partition (_.question.value.startsWith("Na ilu"))
+      (getStats(attendance), getStats(quality))
     }
   }
 

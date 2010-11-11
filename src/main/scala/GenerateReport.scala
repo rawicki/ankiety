@@ -67,6 +67,22 @@ object GenerateReport {
     </table>
   }
 
+  def scatterPlot(data: List[(Double, Double)]): NodeSeq = {
+    <div id="placeholder" style="width:600px;height:300px"></div>
+    <script id="source" language="javascript" type="text/javascript">
+      $(function () {{
+        var d = {
+          (data map { case (x, y) => "[%1s, %2s]".format(x.toString, y.toString) }).mkString("[", ",", "]")
+        };
+        $.plot($({Unparsed("\"#placeholder\"")}), [
+            {{
+                data: d,
+                points: {{show: true}}
+            }}]);
+      }});
+    </script>
+  }
+
   def getUniqueId(): Int = {
     next_tag_id = next_tag_id + 1
     next_tag_id
@@ -87,6 +103,13 @@ object GenerateReport {
     val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2._2.mean)
     val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2._2.mean)
     val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean)
+    val (quality, relativeFilled) = (for {
+           ((person, subject), (_, qualityStats)) <- statsByPersonSubject
+    val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
+    val questions = (for (x <- surveys; answer <- x.values) yield answer.question).toSet
+    val ratios = for (q <- questions) yield (q.stats.filled: Double) / q.stats.allowed * 100
+    } yield (qualityStats.mean, ratios.max)).unzip
+
     val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
     def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
       <table>
@@ -129,6 +152,7 @@ object GenerateReport {
           <link rel="stylesheet" type="text/css" href="templates/style.css"/>
           <script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
           <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
+          <script type="text/javascript" src="templates/flot/jquery.flot.js"></script>
 
           <script type="text/javascript">
               $(function() {{
@@ -341,6 +365,10 @@ object GenerateReport {
           <div class="center">
             <h2>15 najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             { show_per_person_stats(statsByPersonSubject.sortBy(_._2._1.mean) take 15) }
+          </div>
+          <div class="center">
+            <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
+            { scatterPlot(quality zip relativeFilled) }
           </div>
         </body>
       </html>
