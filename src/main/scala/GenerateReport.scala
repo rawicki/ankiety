@@ -111,6 +111,28 @@ object GenerateReport {
     } yield (qualityStats.mean, ratios.max)).unzip
 
     val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
+    def show_per_category_stats(xs: List[(String, CompleteStats)], category: String): NodeSeq =
+      <table>
+        <thead>
+          <tr>
+            <th>{ category }</th>
+            <th>Pytania</th>
+            <th>Obecności (%)</th>
+            <th>Ile próbek</th>
+          </tr>
+        </thead>
+        <tbody>
+            {
+              for((label, CompleteStats(quality, attendance)) <- xs) yield
+                <tr>
+                  <td>{ label }</td>
+                  <td>{ show_question_stats(quality) }</td>
+                  <td>{ show_attendance_stats(attendance) }</td>
+                  <td>{ attendance.sample_size }</td>
+                </tr>
+            }
+        </tbody>
+      </table>
     def show_per_person_stats(xs: List[((Person, Subject), CompleteStats)]): NodeSeq =
       <table>
         <thead>
@@ -203,102 +225,15 @@ object GenerateReport {
           </div>
           <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg stopnia lub tytułu naukowego</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>X</th>
-                    {
-                      for((label, _) <- statsByTitle) yield
-                        <th>{ label }</th>
-                    }
-                  </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>Pytania</th>
-                  {
-                    for((_, CompleteStats(quality, _)) <- statsByTitle) yield
-                      <td>{ show_question_stats(quality) }</td>
-
-                  }
-                </tr>
-                <tr>
-                  <th>Obecności (%)</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByTitle) yield
-                      <td>{ show_attendance_stats(attendance) }</td>
-                  }
-                </tr>
-                <tr>
-                  <th>Ile próbek</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByTitle) yield
-                      <td>{ attendance.sample_size }</td>
-                  }
-                </tr>
-              </tbody>
-            </table>
+            { show_per_category_stats(statsByTitle, "Stopień/Tytuł") }
           </div>
           <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg rodzaju stanowiska</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>X</th>
-                    {
-                      for((label, _) <- statsByAggregatedPosition) yield
-                        <th>{ label }</th>
-                    }
-                  </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>Pytania</th>
-                  {
-                    for((_, CompleteStats(quality, _)) <- statsByAggregatedPosition) yield
-                      <td>{ show_question_stats(quality) }</td>
-                  }
-                </tr>
-                <tr>
-                  <th>Obecności (%)</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByAggregatedPosition) yield
-                      <td>{ show_attendance_stats(attendance) }</td>
-                  }
-                </tr>
-                <tr>
-                  <th>Ile próbek</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByAggregatedPosition) yield
-                      <td>{ attendance.sample_size }</td>
-                  }
-                </tr>
-              </tbody>
-            </table>
+            { show_per_category_stats(statsByAggregatedPosition, "Rodzaj stanowiska") }
           </div>
           <div>
             <h2>Średni wynik dla wszystkich pytań wg stanowiska</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Stanowisko</th>
-                  <th>Pytania</th>
-                  <th>Obecności (%)</th>
-                  <th>Ile próbek</th>
-                </tr>
-              </thead>
-              <tbody>
-                  {
-                    for((label, CompleteStats(quality, attendance)) <- statsByPosition) yield
-                      <tr>
-                        <td>{ label }</td>
-                        <td>{ show_question_stats(quality) }</td>
-                        <td>{ show_attendance_stats(attendance) }</td>
-                        <td>{ attendance.sample_size }</td>
-                      </tr>
-                  }
-              </tbody>
-            </table>
+            { show_per_category_stats(statsByPosition, "Stanowisko") }
           </div>
           <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg typu zajęć</h2>
