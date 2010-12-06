@@ -146,13 +146,13 @@ object GenerateReport {
         </thead>
         <tbody>
           {
-            for(((person, subject), CompleteStats(attendance, questions)) <- xs) yield {
+            for(((person, subject), CompleteStats(quality, attendance)) <- xs) yield {
               val comments = StatsGenerator.getCommentsForPersonSubject(answers, person, subject)
               val comments_block_id = getUniqueId.toString
               <tr>
                 <th>{ person }</th>
                 <td>{ subject }</td>
-                <td>{ show_question_stats(questions) }</td>
+                <td>{ show_question_stats(quality) }</td>
                 <td>{ show_attendance_stats(attendance) }</td>
                 <td>{ attendance.sample_size }</td>
                 <td>{ show_comments_link(comments, comments_block_id) }</td>
