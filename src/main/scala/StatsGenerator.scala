@@ -34,34 +34,31 @@ object StatsGenerator {
     withDefaultStats(optionStats)
   }
 
-  def personMeanAndDevation(xs: List[Survey]): Map[Person, Map[String, Stats]] = {
-    val perPerson: Map[Person, List[Survey]] = xs groupBy (_.person)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val questions: Map[String, List[Answer]] = answers groupBy (_.question.value)
-      questions mapValues getStats
-    }
-  }
-
   def getCompleteStats(xs: List[Survey]): (Stats, Stats) = {
     val quality: List[Answer] = xs flatMap (_.values)
     val attendance: List[Int] = xs flatMap (_.attendance)
     (getStats(quality), withDefaultStats(stats(attendance)))
   }
 
+  def getStatsByCriterium[T](xs: List[Survey], criterium: Survey => T): Map[T, (Stats, Stats)] = {
+    val grouped: Map[T, List[Survey]] = xs groupBy criterium
+    grouped mapValues getCompleteStats
+  }
+
   def statsByClassType(xs: List[Survey]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Survey]] = xs groupBy (_.clazz.code)
-    perPerson mapValues getCompleteStats
+    getStatsByCriterium(xs, _.clazz.code)
   }
 
   def statsByTitle(xs: List[Survey]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Survey]] = xs groupBy (_.person.title)
-    perPerson mapValues getCompleteStats
+    getStatsByCriterium(xs, _.person.title)
   }
 
   def statsByPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
-    val perPerson: Map[String, List[Survey]] = xs groupBy (_.person.position)
-    perPerson mapValues getCompleteStats
+    getStatsByCriterium(xs, _.person.position)
+  }
+
+  def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), (Stats, Stats)] = {
+    getStatsByCriterium(xs, x => (x.person, x.clazz.subject))
   }
 
   def statsByAggregatedPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
@@ -70,8 +67,7 @@ object StatsGenerator {
       List("wykładowca", "starszy wykładowca", "docent").map(_ -> "pracownicy dydaktyczni") ++
       List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący").map(_ -> "pracownicy naukowo-dydaktyczni")
     ).toMap
-    val perPerson: Map[String, List[Survey]] = xs groupBy (x => map getOrElse(x.person.position, "inne"))
-    perPerson mapValues getCompleteStats
+    getStatsByCriterium(xs, x => map getOrElse(x.person.position, "inne"))
   }
 
   def statsByQuestion(xs: List[Survey]): Map[String, Stats] = {
@@ -80,11 +76,6 @@ object StatsGenerator {
     byQuestion mapValues {
       xs => getStats(xs.sortBy{_._1}.map{_._2})
     }
-  }
-
-  def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), (Stats, Stats)] = {
-    val byPersonSubject = xs groupBy (x => (x.person, x.clazz.subject))
-    byPersonSubject mapValues getCompleteStats
   }
 
   def statsByQuestionMatrix(xs: List[Survey]): PartialMatrix[(Stats, Stats)] = {
