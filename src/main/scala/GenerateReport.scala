@@ -68,7 +68,7 @@ object GenerateReport {
   }
 
   def scatterPlot(data: List[(Double, Double)]): NodeSeq = {
-    <div id="placeholder" style="width:600px;height:300px"></div>
+    <div id="placeholder" style="width:600px;height:300px;margin: auto;"></div>
     <script id="source" language="javascript" type="text/javascript">
       $(function () {{
         var d = {
