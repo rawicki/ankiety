@@ -25,9 +25,13 @@ object StatsGenerator {
       Some(Stats(mean, scala.math.sqrt(variance), med, xs.size, xds))
   }
 
-  def getStats(xs: List[Answer]): Stats = stats(xs map (_.value)) match {
-    case None => Stats(0.0, 0.0, 0.0, 0, Nil)
-    case Some(s) => s
+  def withDefaultStats(s: Option[Stats]) = {
+    s getOrElse Stats(0.0, 0.0, 0.0, 0, Nil)
+  }
+
+  def getStats(xs: List[Answer]): Stats = {
+    val optionStats = stats(xs map (_.value))
+    withDefaultStats(optionStats)
   }
 
   def personMeanAndDevation(xs: List[Survey]): Map[Person, Map[String, Stats]] = {
@@ -39,31 +43,25 @@ object StatsGenerator {
     }
   }
 
+  def getCompleteStats(xs: List[Survey]): (Stats, Stats) = {
+    val quality: List[Answer] = xs flatMap (_.values)
+    val attendance: List[Int] = xs flatMap (_.attendance)
+    (getStats(quality), withDefaultStats(stats(attendance)))
+  }
+
   def statsByClassType(xs: List[Survey]): Map[String, (Stats, Stats)] = {
     val perPerson: Map[String, List[Survey]] = xs groupBy (_.clazz.code)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
+    perPerson mapValues getCompleteStats
   }
 
   def statsByTitle(xs: List[Survey]): Map[String, (Stats, Stats)] = {
     val perPerson: Map[String, List[Survey]] = xs groupBy (_.person.title)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
+    perPerson mapValues getCompleteStats
   }
 
   def statsByPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
     val perPerson: Map[String, List[Survey]] = xs groupBy (_.person.position)
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
+    perPerson mapValues getCompleteStats
   }
 
   def statsByAggregatedPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
@@ -73,11 +71,7 @@ object StatsGenerator {
       List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący").map(_ -> "pracownicy naukowo-dydaktyczni")
     ).toMap
     val perPerson: Map[String, List[Survey]] = xs groupBy (x => map getOrElse(x.person.position, "inne"))
-    perPerson mapValues { xs =>
-      val answers: List[Answer] = xs flatMap (_.values)
-      val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
-      (getStats(quality), getStats(attendance))
-    }
+    perPerson mapValues getCompleteStats
   }
 
   def statsByQuestion(xs: List[Survey]): Map[String, Stats] = {
@@ -90,11 +84,7 @@ object StatsGenerator {
 
   def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), (Stats, Stats)] = {
     val byPersonSubject = xs groupBy (x => (x.person, x.clazz.subject))
-    byPersonSubject mapValues { x =>
-      val xs = x flatMap (_.values)
-      val (attendance, quality) = xs partition (_.question.value.startsWith("Na ilu"))
-      (getStats(attendance), getStats(quality))
-    }
+    byPersonSubject mapValues getCompleteStats
   }
 
   def statsByQuestionMatrix(xs: List[Survey]): PartialMatrix[(Stats, Stats)] = {
