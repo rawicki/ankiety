@@ -12,6 +12,8 @@ case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: L
   }
 }
 
+case class CompleteStats(quality: Stats, attendance: Stats) {}
+
 object StatsGenerator {
   def stats[T: Numeric](xs: List[T]): Option[Stats] = xs match {
     case Nil => None
@@ -34,34 +36,34 @@ object StatsGenerator {
     withDefaultStats(optionStats)
   }
 
-  def getCompleteStats(xs: List[Survey]): (Stats, Stats) = {
+  def getCompleteStats(xs: List[Survey]): CompleteStats = {
     val quality: List[Answer] = xs flatMap (_.values)
     val attendance: List[Int] = xs flatMap (_.attendance)
-    (getStats(quality), withDefaultStats(stats(attendance)))
+    CompleteStats(getStats(quality), withDefaultStats(stats(attendance)))
   }
 
-  def getStatsByCriterium[T](xs: List[Survey], criterium: Survey => T): Map[T, (Stats, Stats)] = {
+  def getStatsByCriterium[T](xs: List[Survey], criterium: Survey => T): Map[T, CompleteStats] = {
     val grouped: Map[T, List[Survey]] = xs groupBy criterium
     grouped mapValues getCompleteStats
   }
 
-  def statsByClassType(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+  def statsByClassType(xs: List[Survey]): Map[String, CompleteStats] = {
     getStatsByCriterium(xs, _.clazz.code)
   }
 
-  def statsByTitle(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+  def statsByTitle(xs: List[Survey]): Map[String, CompleteStats] = {
     getStatsByCriterium(xs, _.person.title)
   }
 
-  def statsByPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+  def statsByPosition(xs: List[Survey]): Map[String, CompleteStats] = {
     getStatsByCriterium(xs, _.person.position)
   }
 
-  def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), (Stats, Stats)] = {
+  def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), CompleteStats] = {
     getStatsByCriterium(xs, x => (x.person, x.clazz.subject))
   }
 
-  def statsByAggregatedPosition(xs: List[Survey]): Map[String, (Stats, Stats)] = {
+  def statsByAggregatedPosition(xs: List[Survey]): Map[String, CompleteStats] = {
     val map: Map[String, String] = (
       List("doktorant informatyka", "doktorant matematyka", "doktorant MISDoMP").map(_ -> "doktoranci" ) ++
       List("wykładowca", "starszy wykładowca", "docent").map(_ -> "pracownicy dydaktyczni") ++

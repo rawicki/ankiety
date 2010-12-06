@@ -3,7 +3,7 @@ import scala.xml._
 
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
-import surveys.StatsGenerator.{Stats, StatsGenerator}
+import surveys.StatsGenerator.{Stats, CompleteStats, StatsGenerator}
 
 object GenerateReport {
   var next_tag_id: Int = 1
@@ -98,20 +98,20 @@ object GenerateReport {
     val answers = (new DataImporter(salt)).readSurveys
     val fw = new OutputStreamWriter(new FileOutputStream("Report.html"), "UTF-8")
     val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
-    val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2._2.mean)
-    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2._2.mean)
-    val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2._2.mean)
-    val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2._2.mean)
-    val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2._2.mean)
+    val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2.quality.mean)
+    val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2.quality.mean)
+    val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2.quality.mean)
+    val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2.quality.mean)
+    val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2.quality.mean)
     val (quality, relativeFilled) = (for {
-           ((person, subject), (_, qualityStats)) <- statsByPersonSubject
-    val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
-    val questions = (for (x <- surveys; answer <- x.values) yield answer.question).toSet
-    val ratios = for (q <- questions) yield (q.stats.filled: Double) / q.stats.allowed * 100
+           ((person, subject), CompleteStats(qualityStats, _)) <- statsByPersonSubject
+      val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
+      val questions = (for (x <- surveys; answer <- x.values) yield answer.question).toSet
+      val ratios = for (q <- questions) yield (q.stats.filled: Double) / q.stats.allowed * 100
     } yield (qualityStats.mean, ratios.max)).unzip
 
     val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
-    def show_per_person_stats(xs: List[((Person, Subject), (Stats, Stats))]): NodeSeq =
+    def show_per_person_stats(xs: List[((Person, Subject), CompleteStats)]): NodeSeq =
       <table>
         <thead>
           <tr>
@@ -125,7 +125,7 @@ object GenerateReport {
         </thead>
         <tbody>
           {
-            for(((person, subject), (attendance, questions)) <- xs) yield {
+            for(((person, subject), CompleteStats(attendance, questions)) <- xs) yield {
               val comments = StatsGenerator.getCommentsForPersonSubject(answers, person, subject)
               val comments_block_id = getUniqueId.toString
               <tr>
@@ -217,22 +217,22 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByTitle) yield
-                      <td>{ show_question_stats(questions) }</td>
+                    for((_, CompleteStats(quality, _)) <- statsByTitle) yield
+                      <td>{ show_question_stats(quality) }</td>
 
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByTitle) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByTitle) yield
                       <td>{ show_attendance_stats(attendance) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByTitle) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByTitle) yield
                       <td>{ attendance.sample_size }</td>
                   }
                 </tr>
@@ -255,21 +255,21 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield
-                      <td>{ show_question_stats(questions) }</td>
+                    for((_, CompleteStats(quality, _)) <- statsByAggregatedPosition) yield
+                      <td>{ show_question_stats(quality) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByAggregatedPosition) yield
                       <td>{ show_attendance_stats(attendance) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByAggregatedPosition) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByAggregatedPosition) yield
                       <td>{ attendance.sample_size }</td>
                   }
                 </tr>
@@ -292,21 +292,21 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByPosition) yield
-                      <td>{ show_question_stats(questions) }</td>
+                    for((_, CompleteStats(quality, attendance)) <- statsByPosition) yield
+                      <td>{ show_question_stats(quality) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByPosition) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByPosition) yield
                       <td>{ show_attendance_stats(attendance) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByPosition) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByPosition) yield
                       <td>{ attendance.sample_size }</td>
                   }
                 </tr>
@@ -329,21 +329,21 @@ object GenerateReport {
                 <tr>
                   <th>Pytania</th>
                   {
-                    for((_, (attendance, questions)) <- statsByClassType) yield
-                      <td>{ show_question_stats(questions) }</td>
+                    for((_, CompleteStats(quality, _)) <- statsByClassType) yield
+                      <td>{ show_question_stats(quality) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Obecności (%)</th>
                   {
-                    for((_, (attendance, questions)) <- statsByClassType) yield
+                    for((_, CompleteStats(quality, attendance)) <- statsByClassType) yield
                       <td>{ show_attendance_stats(attendance) }</td>
                   }
                 </tr>
                 <tr>
                   <th>Ile próbek</th>
                   {
-                    for((_, (attendance, questions)) <- statsByClassType) yield
+                    for((_, CompleteStats(_, attendance)) <- statsByClassType) yield
                       <td>{ attendance.sample_size }</td>
                   }
                 </tr>
@@ -360,11 +360,11 @@ object GenerateReport {
           </div>
           <div class="center">
             <h2>15 najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(-_._2._2.dev) take 15) }
+            { show_per_person_stats(statsByPersonSubject.sortBy(-_._2.quality.dev) take 15) }
           </div>
           <div class="center">
             <h2>15 najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(_._2._1.mean) take 15) }
+            { show_per_person_stats(statsByPersonSubject.sortBy(_._2.attendance.mean) take 15) }
           </div>
           <div class="center">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>

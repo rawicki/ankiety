@@ -63,7 +63,7 @@ class DataImporter(hashSalt: Option[String]) {
       val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
           (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
       (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
-          val (quality, attendance) = answers partition (_.question.value.startsWith("Na ilu"))
+          val (attendance, quality) = answers partition (_.question.value.startsWith("Na ilu"))
           val comment = comments get sheetId
           Survey(sheetId, clazz, person, quality, attendance.headOption.map(_.value), comment)
       }).toList
