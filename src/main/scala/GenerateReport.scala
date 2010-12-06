@@ -214,11 +214,11 @@ object GenerateReport {
             {
               showPartialMatrix(statsByQuestionMatrix, new Text("-"), true) {
                 case (stats1, stats2) => {
+                  def getColour(correlation: Double): String = {
+                    (scala.math.min(500 - correlation * 500, 200)).toInt.toHexString * 3
+                  }
                   val cor = stats1 correlationWith stats2
-                  if (cor < 0.75 || cor > 0.99)
-                    <span style="color: gray">{show_double(cor)}</span>
-                  else
-                    new Text(show_double(cor))
+                  <span style={ "color: " + getColour(cor) }>{show_double(cor)}</span>
                 }
               }
             }
