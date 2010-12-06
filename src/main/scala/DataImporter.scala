@@ -36,20 +36,6 @@ class DataImporter(hashSalt: Option[String]) {
   private object SurveyReader extends Reader("przyklad_1000-2009z_zajecia_wszystko.csv") {
     val questionStats = QuestionStatsReader.read
     def read(comments: Map[String, String], positions: Map[String, Position]): List[Survey] = {
-      val questions: Map[String, Question] = (for (x <- records) yield {
-        val personId = extract(x, "id osoby")
-        val classId = extract(x, "id zajęć")
-        val questionId = extract(x, "id pytania")
-        questionId -> parseQuestion(x, questionStats((personId, classId, questionId)))
-      }).toMap
-      val subjects: Map[String, Subject] = (for (x <- records) yield {
-        val subject = parseSubject(x)
-        subject.code -> subject
-      }).toMap
-      val classes: Map[String, Class] = (for (x <- records) yield {
-        val clazz = parseClass(subjects(extract(x, "kod przedmiotu")), x)
-        clazz.id -> clazz
-      }).toMap
       val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- records) yield {
         val sheetId = extract(x, "kod kartki")
         val personId = extract(x, "id osoby")
