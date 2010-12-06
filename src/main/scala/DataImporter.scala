@@ -3,7 +3,7 @@ package surveys.DataImporter
 import scala.io.Source
 import surveys.SurveyClasses._
 
-class DataImporter(hashSalt: Option[Int]) {
+class DataImporter(hashSalt: Option[String]) {
   def openDataFileRaw(filename: String): (Vector[String], List[Vector[String]]) = {
     val reader = new com.csvreader.CsvReader(filename, ';', java.nio.charset.Charset.forName("UTF-8"))
     reader.readHeaders
@@ -17,7 +17,7 @@ class DataImporter(hashSalt: Option[Int]) {
   def md5(x: String, limit: Int = 5): String = hashSalt match {
 		case Some(salt) => {
 			val md5 = java.security.MessageDigest.getInstance("MD5");
-			md5.update(salt.toString.getBytes())
+			md5.update(salt.getBytes())
 			md5.update(x.getBytes())
 			md5.digest().map(0xFF & _).map { "%02x".format(_) }.foldLeft(""){_ + _} take limit
 		}
