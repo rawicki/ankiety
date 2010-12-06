@@ -281,35 +281,22 @@ object GenerateReport {
             <table>
               <thead>
                 <tr>
-                  <th>X</th>
-                    {
-                      for((label, _) <- statsByPosition) yield
-                        <th>{ label }</th>
-                    }
-                  </tr>
+                  <th>Stanowisko</th>
+                  <th>Pytania</th>
+                  <th>Obecności (%)</th>
+                  <th>Ile próbek</th>
+                </tr>
               </thead>
               <tbody>
-                <tr>
-                  <th>Pytania</th>
                   {
-                    for((_, CompleteStats(quality, attendance)) <- statsByPosition) yield
-                      <td>{ show_question_stats(quality) }</td>
+                    for((label, CompleteStats(quality, attendance)) <- statsByPosition) yield
+                      <tr>
+                        <td>{ label }</td>
+                        <td>{ show_question_stats(quality) }</td>
+                        <td>{ show_attendance_stats(attendance) }</td>
+                        <td>{ attendance.sample_size }</td>
+                      </tr>
                   }
-                </tr>
-                <tr>
-                  <th>Obecności (%)</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByPosition) yield
-                      <td>{ show_attendance_stats(attendance) }</td>
-                  }
-                </tr>
-                <tr>
-                  <th>Ile próbek</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByPosition) yield
-                      <td>{ attendance.sample_size }</td>
-                  }
-                </tr>
               </tbody>
             </table>
           </div>
