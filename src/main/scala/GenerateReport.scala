@@ -89,7 +89,7 @@ object GenerateReport {
   }
 
   def main(args: Array[String]){
-		val salt = if (args contains "md5") Some((1 to 10).map(_ => scala.util.Random.nextPrintableChar).mkString("")) else None
+    val salt = if (args contains "md5") Some((1 to 10).map(_ => scala.util.Random.nextPrintableChar).mkString("")) else None
     salt foreach { x =>
       val fw = new OutputStreamWriter(new FileOutputStream("salt_KEEP_SECRET.txt"), "UTF-8")
       fw.write(x.toString)
