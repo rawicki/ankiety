@@ -119,6 +119,6 @@ object StatsGenerator {
 
   def getCommentsForPersonSubject(xs: List[Survey], person: Person, subject: Subject): List[String] = {
     val xss = xs.filter(x => x.person == person && x.clazz.subject == subject)
-    xss.collect{ case Survey(_, _, _, _, Some(s)) => s }
+    xss.collect{ case Survey(_, _, _, _, _, Some(s)) => s }
   }
 }
