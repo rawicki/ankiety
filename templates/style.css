@@ -61,6 +61,13 @@ tr.comments {
     display: none;
 }
 
+span.comment-header {
+    text-align: left;
+    display: block;
+    margin-left: 70px;
+    margin-top: 7px;
+}
+
 span.comment {
     background: #EEEEEE;
     display: block;

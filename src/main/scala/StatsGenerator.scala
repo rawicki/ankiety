@@ -14,6 +14,8 @@ case class Stats(mean: Double, dev: Double, med: Double, sample_size: Int, xs: L
 
 case class CompleteStats(quality: Stats, attendance: Stats) {}
 
+case class ClassInstance(person: Person, subject: Subject, classType: String) {}
+
 object StatsGenerator {
   def stats[T: Numeric](xs: List[T]): Option[Stats] = xs match {
     case Nil => None
@@ -59,8 +61,8 @@ object StatsGenerator {
     getStatsByCriterium(xs, _.person.position)
   }
 
-  def statsByPersonSubject(xs: List[Survey]): Map[(Person, Subject), CompleteStats] = {
-    getStatsByCriterium(xs, x => (x.person, x.clazz.subject))
+  def statsByPersonSubject(xs: List[Survey]): Map[ClassInstance, CompleteStats] = {
+    getStatsByCriterium(xs, x => ClassInstance(x.person, x.clazz.subject, x.clazz.code))
   }
 
   def statsByAggregatedPosition(xs: List[Survey]): Map[String, CompleteStats] = {
@@ -100,8 +102,8 @@ object StatsGenerator {
     PartialMatrix(questions, values.toMap)
   }
 
-  def getCommentsForPersonSubject(xs: List[Survey], person: Person, subject: Subject): List[String] = {
-    val xss = xs.filter(x => x.person == person && x.clazz.subject == subject)
-    xss.collect{ case Survey(_, _, _, _, _, Some(s)) => s }
+  def getCommentsForPersonSubject(xs: List[Survey], classInstance: ClassInstance): List[(String, String)] = {
+    val xss = xs.filter(x => x.person == classInstance.person && x.clazz.subject == classInstance.subject)
+    xss.collect{ case Survey(_, clazz, _, _, _, Some(s)) => (clazz.code, s) }
   }
 }

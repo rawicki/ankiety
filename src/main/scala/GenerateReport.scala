@@ -3,7 +3,7 @@ import scala.xml._
 
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
-import surveys.StatsGenerator.{Stats, CompleteStats, StatsGenerator}
+import surveys.StatsGenerator.{Stats, CompleteStats, ClassInstance, StatsGenerator}
 
 object GenerateReport {
   var next_tag_id: Int = 1
@@ -29,12 +29,17 @@ object GenerateReport {
   def show_attendance_stats(s: Stats): NodeSeq =
       show_mean(s) ++ dumpForSparkbar(s, 5 to 95 by 10)
 
-  def show_comments(comments: List[String]): NodeSeq =
+  def show_comments(comments: List[(String, String)]): NodeSeq =
     Seq(<div class="comments">{
-      for(comment <- comments) yield Seq(<span class="comment">{ comment }</span>)
+      for((classType, comment) <- comments) yield Seq(
+        <span class="comment-header">Komentarz wystawiony dla zajęć typu: <strong>{classType}</strong></span>
+        <span class="comment">
+          { comment }
+        </span>
+      )
     }</div>)
 
-  def show_comments_link(comments: List[String], id: String): NodeSeq =
+  def show_comments_link(comments: List[(String, String)], id: String): NodeSeq =
     if(comments.nonEmpty){
         <a href="#" onClick={ "$(\"#comments-" ++ id ++ "\").toggle(); return(false);" }>
           Pokaż({ comments.size })
@@ -103,7 +108,7 @@ object GenerateReport {
     val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).toList.sortBy(-_._2.quality.mean)
     val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).toList.sortBy(-_._2.quality.mean)
     val (quality, relativeFilled) = (for {
-           ((person, subject), CompleteStats(qualityStats, _)) <- statsByPersonSubject
+           (ClassInstance(person, subject, _), CompleteStats(qualityStats, _)) <- statsByPersonSubject
       val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
       val questions = (for (x <- surveys; answer <- x.values) yield answer.question).toSet
       val ratios = for (q <- questions) yield (q.stats.filled: Double) / q.stats.allowed * 100
@@ -132,12 +137,13 @@ object GenerateReport {
             }
         </tbody>
       </table>
-    def show_per_person_stats(xs: List[((Person, Subject), CompleteStats)]): NodeSeq =
+    def show_per_person_stats(xs: List[(ClassInstance, CompleteStats)]): NodeSeq =
       <table>
         <thead>
           <tr>
             <th>Osoba</th>
             <th>Przedmiot</th>
+            <th>Typ</th>
             <th>Oceny</th>
             <th>Obecność (%)</th>
             <th>Próbka</th>
@@ -146,12 +152,13 @@ object GenerateReport {
         </thead>
         <tbody>
           {
-            for(((person, subject), CompleteStats(quality, attendance)) <- xs) yield {
-              val comments = StatsGenerator.getCommentsForPersonSubject(answers, person, subject)
+            for((classInstance @ ClassInstance(person, subject, classType), CompleteStats(quality, attendance)) <- xs) yield {
+              val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
               val comments_block_id = getUniqueId.toString
               <tr>
                 <th>{ person }</th>
                 <td>{ subject }</td>
+                <td>{ classType }</td>
                 <td>{ show_question_stats(quality) }</td>
                 <td>{ show_attendance_stats(attendance) }</td>
                 <td>{ attendance.sample_size }</td>
