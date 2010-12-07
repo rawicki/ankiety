@@ -236,40 +236,7 @@ object GenerateReport {
           </div>
           <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg typu zajęć</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>X</th>
-                    {
-                      for((label, _) <- statsByClassType) yield
-                        <th>{ label }</th>
-                    }
-                  </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>Pytania</th>
-                  {
-                    for((_, CompleteStats(quality, _)) <- statsByClassType) yield
-                      <td>{ show_question_stats(quality) }</td>
-                  }
-                </tr>
-                <tr>
-                  <th>Obecności (%)</th>
-                  {
-                    for((_, CompleteStats(quality, attendance)) <- statsByClassType) yield
-                      <td>{ show_attendance_stats(attendance) }</td>
-                  }
-                </tr>
-                <tr>
-                  <th>Ile próbek</th>
-                  {
-                    for((_, CompleteStats(_, attendance)) <- statsByClassType) yield
-                      <td>{ attendance.sample_size }</td>
-                  }
-                </tr>
-              </tbody>
-            </table>
+            { show_per_category_stats(statsByClassType, "Typ zajęć") }
           </div>
           <div class="center">
             <h2>15 najlepszych wyników (osoba, przedmiot)</h2>
