@@ -214,10 +214,10 @@ object GenerateReport {
               showPartialMatrix(statsByQuestionMatrix, new Text("-"), true) {
                 case (stats1, stats2) => {
                   def getColour(correlation: Double): String = {
-                    (scala.math.min(500 - correlation * 500, 200)).toInt.toHexString * 3
+                    (scala.math.min(400 - correlation * 400, 220)).toInt.toHexString * 3
                   }
                   val cor = stats1 correlationWith stats2
-                  <span style={ "color: " + getColour(cor) }>{show_double(cor)}</span>
+                  <span style={ "color: #" + getColour(cor) }>{show_double(cor)}</span>
                 }
               }
             }
@@ -230,7 +230,7 @@ object GenerateReport {
             <h2>Średni wynik dla wszystkich pytań wg rodzaju stanowiska</h2>
             { show_per_category_stats(statsByAggregatedPosition, "Rodzaj stanowiska") }
           </div>
-          <div>
+          <div class="center">
             <h2>Średni wynik dla wszystkich pytań wg stanowiska</h2>
             { show_per_category_stats(statsByPosition, "Stanowisko") }
           </div>

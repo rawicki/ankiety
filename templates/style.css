@@ -34,6 +34,9 @@ table tbody td {
 
 div.center {
     clear: both;
+    margin: auto;
+    margin-bottom: 50px;
+    page-break-inside: avoid;
 }
 
 div.left {
@@ -48,17 +51,6 @@ div.right {
     width: 45%;
 }
 
-.verticaltext {
-    writing-mode: tb-rl;
-    -webkit-transform:rotate(90deg);
-	-moz-transform:rotate(90deg);
-	-o-transform: rotate(90deg);
-    padding: 0;
-    border: 0;
-    white-space:nowrap;
-    border: 1px solid red;
-}
-
 a {
     text-decoration: none;
     color: gray;
@@ -70,10 +62,10 @@ tr.comments {
 }
 
 span.comment {
-    background: #EAEAEA;
+    background: #EEEEEE;
     display: block;
     margin: 7px 70px;
-    padding: 2px;
+    padding: 4px;
     white-space: pre-wrap;
 }
 
