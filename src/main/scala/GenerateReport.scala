@@ -32,10 +32,7 @@ object GenerateReport {
   def show_comments(comments: List[(String, String)]): NodeSeq =
     Seq(<div class="comments">{
       for((classType, comment) <- comments) yield Seq(
-        <span class="comment-header">Komentarz wystawiony dla zajęć typu: <strong>{classType}</strong></span>
-        <span class="comment">
-          { comment }
-        </span>
+        <div class="comment"><div class="comment-header">{classType}</div>{ comment }</div>
       )
     }</div>)
 
