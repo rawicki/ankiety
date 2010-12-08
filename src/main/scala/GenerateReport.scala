@@ -38,7 +38,7 @@ object GenerateReport {
 
   def show_comments_link(comments: List[(String, String)], id: String): NodeSeq =
     if(comments.nonEmpty){
-        <a href="#" onClick={ "$(\"#comments-" ++ id ++ "\").toggle(); return(false);" }>
+        <a href="#" onClick={ "$(\"#comments-" ++ id ++ "\").toggle(500); return(false);" }>
           Pokaż({ comments.size })
         </a>
     } else { new Text("Brak") }
@@ -162,7 +162,7 @@ object GenerateReport {
                 <td>{ show_comments_link(comments, comments_block_id) }</td>
               </tr>
               <tr class="comments" id={ "comments-" ++ comments_block_id }>
-                <td colspan="6">
+                <td colspan="7">
                   { show_comments(comments) }
                 </td>
               </tr>
