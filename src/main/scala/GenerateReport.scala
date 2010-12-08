@@ -10,7 +10,7 @@ object GenerateReport {
 
   def show_mean(s: Stats): NodeSeq =
       <span style="white-space: nowrap">
-        {show_double(s.mean)}
+        <span title={s.name}>{show_double(s.mean)}</span>
         <span style="font-size: 0.7em" title="Odchylenie standardowe">(&sigma;: {show_double(s.dev)})</span>
       </span>
 
@@ -101,7 +101,7 @@ object GenerateReport {
       fw.close()
     }
     val answers = (new DataImporter(salt)).readSurveys
-    val statsByQuestion = StatsGenerator.statsByQuestion(answers).toList
+    val statsByQuestion = StatsGenerator.statsByQuestion(answers)
     val statsByClassType = StatsGenerator.statsByClassType(answers).toList.sortBy(-_._2.quality.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).toList.sortBy(-_._2.quality.mean)
     val statsByPosition = StatsGenerator.statsByPosition(answers).toList.sortBy(-_._2.quality.mean)
@@ -206,9 +206,9 @@ object GenerateReport {
               </thead>
               <tbody>
                 {
-                  for((label, stats) <- statsByQuestion.sortBy(_._2.mean)) yield
+                  for(stats <- statsByQuestion.xs.sortBy(_.mean)) yield
                     <tr>
-                    <th>{ label }</th>
+                    <th>{ stats.name }</th>
                     <td>{ show_mean(stats) }</td>
                     </tr>
                 }
