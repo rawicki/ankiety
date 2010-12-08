@@ -72,7 +72,7 @@ div.comment-header {
 }
 
 div.comment {
-    min-height: 3em;
+    min-height: 2em;
     background: #EEEEEE;
     margin: 7px 70px;
     padding: 4px;
