@@ -61,19 +61,24 @@ tr.comments {
     display: none;
 }
 
-span.comment-header {
-    text-align: left;
-    display: block;
-    margin-left: 70px;
-    margin-top: 7px;
+div.comment-header {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.7em;
+    color: white;
+    background: #555;
+    padding: 5px;
 }
 
-span.comment {
+div.comment {
+    min-height: 2em;
     background: #EEEEEE;
-    display: block;
     margin: 7px 70px;
     padding: 4px;
+    padding-right: 6em;
     white-space: pre-wrap;
+    position: relative;
 }
 
 span.inlinesparkbar {
