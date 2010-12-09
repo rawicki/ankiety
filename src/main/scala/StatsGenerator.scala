@@ -19,7 +19,7 @@ case class CompositeStats(xs: List[Stats]) {
 
 case class CompleteStats[T](of: T, quality: Stats, attendance: Stats)
 
-case class ClassInstance(person: Person, subject: Subject, classType: String) {}
+case class ClassInstance(person: Person, subject: Subject, classType: String)
 
 object StatsGenerator {
   def stats[T: Numeric](name: String, xs: List[T]): Option[Stats] = xs match {
