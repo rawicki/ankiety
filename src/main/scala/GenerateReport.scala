@@ -3,7 +3,7 @@ import scala.xml._
 
 import surveys.SurveyClasses._
 import surveys.DataImporter.DataImporter
-import surveys.StatsGenerator.{Stats, CompleteStats, ClassInstance, StatsGenerator}
+import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 
 object GenerateReport {
   var next_tag_id: Int = 1
@@ -23,8 +23,8 @@ object GenerateReport {
           (for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
       }</span>
 
-  def show_question_stats(s: Stats): NodeSeq =
-      show_mean(s) ++ dumpForSparkbar(s, 1 to 7)
+  def show_question_stats(s: CompositeStats): NodeSeq =
+      show_mean(s.flat) ++ dumpForSparkbar(s.flat, 1 to 7)
 
   def show_attendance_stats(s: Stats): NodeSeq =
       show_mean(s) ++ dumpForSparkbar(s, 5 to 95 by 10)
@@ -129,7 +129,7 @@ object GenerateReport {
                   <td>{ label }</td>
                   <td>{ show_question_stats(quality) }</td>
                   <td>{ show_attendance_stats(attendance) }</td>
-                  <td>{ attendance.sample_size }</td>
+                  <td>{ quality.sample_size }</td>
                 </tr>
             }
         </tbody>

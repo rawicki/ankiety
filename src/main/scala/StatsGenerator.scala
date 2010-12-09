@@ -14,10 +14,13 @@ case class Stats(name: String, mean: Double, dev: Double, med: Double, sample_si
 
 case class CompositeStats(xs: List[Stats]) {
   assert(xs != Nil)
-  val flat = StatsGenerator.stats(xs map (_.name) mkString ", ", xs flatMap (_.xs))
+  val flat = StatsGenerator.stats(xs map (_.name) mkString ", ", xs flatMap (_.xs)).get
+  val mean = flat.mean
+  val dev = flat.dev
+  val sample_size = xs.map(_.sample_size).max
 }
 
-case class CompleteStats[T](of: T, quality: Stats, attendance: Stats)
+case class CompleteStats[T](of: T, quality: CompositeStats, attendance: Stats)
 
 case class ClassInstance(person: Person, subject: Subject, classType: String)
 
@@ -44,9 +47,10 @@ object StatsGenerator {
   }
 
   def getCompleteStats[T](xs: List[Survey]): T => CompleteStats[T] = {
-    val quality: List[Answer] = xs flatMap (_.values)
+    val quality: Map[String, List[Answer]] = (xs flatMap (_.values)) groupBy (_.question.value)
     val attendance: List[Int] = xs flatMap (_.attendance)
-    CompleteStats(_, getStats("Średnia z ocen", quality), withDefaultStats(stats("Obecność", attendance)))
+    val compositeStats = CompositeStats((quality map { case (key, answers) => getStats(key, answers) }).toList)
+    CompleteStats(_, compositeStats, withDefaultStats(stats("Obecność", attendance)))
   }
 
   def getStatsByCriterium[T](xs: List[Survey], criterium: Survey => T): List[CompleteStats[T]] = {
