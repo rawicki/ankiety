@@ -161,7 +161,7 @@ object GenerateReport {
                 <td>{ classType }</td>
                 <td>{ show_question_stats(quality) }</td>
                 <td>{ show_attendance_stats(attendance) }</td>
-                <td>{ attendance.sample_size }</td>
+                <td>{ quality.sample_size }</td>
                 <td>{ show_comments_link(comments, comments_block_id) }</td>
               </tr>
               <tr class="comments" id={ "comments-" ++ comments_block_id }>
