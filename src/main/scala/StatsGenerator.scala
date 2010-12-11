@@ -20,7 +20,7 @@ case class CompositeStats[T: Show](xs: List[Stats[T]]) {
   val sample_size = xs.map(_.sample_size).max
 }
 
-case class CompleteStats[T](of: T, quality: CompositeStats[Question], attendance: Stats[Question])
+case class CompleteStats[T, U: Show](of: T, quality: CompositeStats[U], attendance: Stats[Question])
 
 case class ClassInstance(person: Person, subject: Subject, classType: String)
 
@@ -46,8 +46,8 @@ object StatsGenerator {
     withDefaultStats(optionStats)
   }
 
-  def getCompleteStats[T](xs: List[Survey]): T => CompleteStats[T] = {
-    val quality: Map[Question, List[Answer]] = (xs flatMap (_.values)) groupBy (_.qi.question)
+  def getCompleteStats[T, U: Show](xs: List[Survey], of: Answer => U): T => CompleteStats[T, U] = {
+    val quality: Map[U, List[Answer]] = (xs flatMap (_.values)) groupBy of
     val attendance: List[Answer] = xs flatMap (_.attendance)
     val attendanceQuestion = {
       val set = attendance.map(_.qi.question).toSet
@@ -58,29 +58,32 @@ object StatsGenerator {
     CompleteStats(_, compositeStats, getStats(attendanceQuestion, attendance))
   }
 
-  def getStatsByCriterium[T](xs: List[Survey], criterium: Survey => T): List[CompleteStats[T]] = {
+  def getStatsByCriterium[T, U: Show](xs: List[Survey], criterium: Survey => T, of: Answer => U): List[CompleteStats[T, U]] = {
     val grouped: Map[T, List[Survey]] = xs groupBy criterium
     (grouped map {
-      case (key, value) => getCompleteStats(value)(key)
+      case (key, value) => getCompleteStats(value, of).apply(key)
     }).toList
   }
 
-  def statsByClassType(xs: List[Survey]): List[CompleteStats[String]] = getStatsByCriterium(xs, _.clazz.code)
+  def statsByClassType(xs: List[Survey]): List[CompleteStats[String, Question]] =
+    getStatsByCriterium(xs, _.clazz.code, _.qi.question)
 
-  def statsByTitle(xs: List[Survey]): List[CompleteStats[String]] = getStatsByCriterium(xs, _.person.title)
+  def statsByTitle(xs: List[Survey]): List[CompleteStats[String, Question]] =
+    getStatsByCriterium(xs, _.person.title, _.qi.question)
 
-  def statsByPosition(xs: List[Survey]): List[CompleteStats[String]] = getStatsByCriterium(xs, _.person.position)
+  def statsByPosition(xs: List[Survey]): List[CompleteStats[String, Question]] =
+    getStatsByCriterium(xs, _.person.position, _.qi.question)
 
-  def statsByPersonSubject(xs: List[Survey]): List[CompleteStats[ClassInstance]] =
-    getStatsByCriterium(xs, x => ClassInstance(x.person, x.clazz.subject, x.clazz.code))
+  def statsByPersonSubject(xs: List[Survey]): List[CompleteStats[ClassInstance, QuestionInstance]] =
+    getStatsByCriterium(xs, x => ClassInstance(x.person, x.clazz.subject, x.clazz.code), _.qi)
 
-  def statsByAggregatedPosition(xs: List[Survey]): List[CompleteStats[String]] = {
+  def statsByAggregatedPosition(xs: List[Survey]): List[CompleteStats[String, QuestionInstance]] = {
     val map: Map[String, String] = (
       List("doktorant informatyka", "doktorant matematyka", "doktorant MISDoMP").map(_ -> "doktoranci" ) ++
       List("wykładowca", "starszy wykładowca", "docent").map(_ -> "pracownicy dydaktyczni") ++
       List("asystent", "adiunkt", "profesor nadzwyczajny", "profesor zwyczajny", "profesor wizytujący").map(_ -> "pracownicy naukowo-dydaktyczni")
     ).toMap
-    getStatsByCriterium(xs, x => map getOrElse(x.person.position, "inne"))
+    getStatsByCriterium(xs, x => map getOrElse(x.person.position, "inne"), _.qi)
   }
 
   def statsByQuestion(xs: List[Survey]): CompositeStats[Question] = {

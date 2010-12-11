@@ -44,4 +44,8 @@ object Show {
     def toHTML(x: Question) = new Text(x.value)
     def toString(x: Question) = x.value
   }
+  implicit object QuestionInstanceShow extends Show[QuestionInstance] {
+    def toHTML(x: QuestionInstance) = QuestionShow.toHTML(x.question)
+    def toString(x: QuestionInstance) = QuestionShow.toString(x.question)
+  }
 }

@@ -23,10 +23,10 @@ object GenerateReport {
           (for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
       }</span>
 
-  def show_question_stats(s: CompositeStats[Question]): NodeSeq =
+  def show_question_stats[T: Show](s: CompositeStats[T]): NodeSeq =
       show_mean(s.flat) ++ dumpForSparkbar(s.flat, 1 to 7)
 
-  def show_attendance_stats(s: Stats[Question]): NodeSeq =
+  def show_attendance_stats[T: Show](s: Stats[T]): NodeSeq =
       show_mean(s) ++ dumpForSparkbar(s, 5 to 95 by 10)
 
   def show_comments(comments: List[(String, String)]): NodeSeq =
@@ -115,7 +115,7 @@ object GenerateReport {
     } yield (qualityStats.mean, ratios.max)).unzip
 
     val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
-    def show_per_category_stats(xs: List[CompleteStats[String]], category: String): NodeSeq =
+    def show_per_category_stats[T: Show](xs: List[CompleteStats[String, T]], category: String): NodeSeq =
       <table>
         <thead>
           <tr>
@@ -137,7 +137,7 @@ object GenerateReport {
             }
         </tbody>
       </table>
-    def show_per_person_stats(xs: List[CompleteStats[ClassInstance]]): NodeSeq =
+    def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq =
       <table>
         <thead>
           <tr>
@@ -155,13 +155,17 @@ object GenerateReport {
             for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
               val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
               val comments_block_id = getUniqueId.toString
+              val allowed = quality.xs.map(_.of.qs.allowed).max
               <tr>
                 <th>{ person }</th>
                 <td>{ subject }</td>
                 <td>{ classType }</td>
                 <td>{ show_question_stats(quality) }</td>
                 <td>{ show_attendance_stats(attendance) }</td>
-                <td>{ quality.sample_size }</td>
+                <td>
+                  { quality.sample_size }
+                  <span style="font-size: 0.6em">({show_double((quality.sample_size: Double) / allowed * 100)}%)</span>
+                </td>
                 <td>{ show_comments_link(comments, comments_block_id) }</td>
               </tr>
               <tr class="comments" id={ "comments-" ++ comments_block_id }>
