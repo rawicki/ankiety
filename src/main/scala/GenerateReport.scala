@@ -8,25 +8,25 @@ import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstan
 object GenerateReport {
   var next_tag_id: Int = 1
 
-  def show_mean(s: Stats): NodeSeq =
+  def show_mean[T: Show](s: Stats[T]): NodeSeq =
       <span style="white-space: nowrap">
-        <span title={s.name}>{show_double(s.mean)}</span>
+        <span title={implicitly[Show[T]].toHTML(s.of)}>{show_double(s.mean)}</span>
         <span style="font-size: 0.7em" title="Odchylenie standardowe">(&sigma;: {show_double(s.dev)})</span>
       </span>
 
   def show_double(d: Double): String =
       "%2.3f" format d
 
-  def dumpForSparkbar(s: Stats, domain: Seq[Int]): NodeSeq =
+  def dumpForSparkbar(s: Stats[_], domain: Seq[Int]): NodeSeq =
       <span class="inlinesparkbar">{
           val grouped = s.xs.groupBy(identity) mapValues (_.size)
           (for (x <- domain) yield grouped.getOrElse(x, 0)).mkString(",")
       }</span>
 
-  def show_question_stats(s: CompositeStats): NodeSeq =
+  def show_question_stats(s: CompositeStats[Question]): NodeSeq =
       show_mean(s.flat) ++ dumpForSparkbar(s.flat, 1 to 7)
 
-  def show_attendance_stats(s: Stats): NodeSeq =
+  def show_attendance_stats(s: Stats[Question]): NodeSeq =
       show_mean(s) ++ dumpForSparkbar(s, 5 to 95 by 10)
 
   def show_comments(comments: List[(String, String)]): NodeSeq =
@@ -107,8 +107,11 @@ object GenerateReport {
     val (quality, relativeFilled) = (for {
            CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
       val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
-      val questions = (for (x <- surveys; answer <- x.values) yield answer.question).toSet
-      val ratios = for (q <- questions) yield (q.stats.filled: Double) / q.stats.allowed * 100
+      val ratios = for {
+        x <- surveys
+        answer <- x.values
+        val qs = answer.qi.qs
+      } yield (qs.filled: Double) / qs.allowed * 100
     } yield (qualityStats.mean, ratios.max)).unzip
 
     val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
@@ -205,7 +208,7 @@ object GenerateReport {
                 {
                   for(stats <- statsByQuestion.xs.sortBy(_.mean)) yield
                     <tr>
-                    <th>{ stats.name }</th>
+                    <th>{ implicitly[Show[Question]].toHTML(stats.of) }</th>
                     <td>{ show_mean(stats) }</td>
                     </tr>
                 }

@@ -2,8 +2,8 @@ package surveys.StatsGenerator
 
 import surveys.SurveyClasses._
 
-case class Stats(name: String, mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Double]) {
-  def correlationWith(s: Stats): Double = {
+case class Stats[T](of: T, mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Double]) {
+  def correlationWith(s: Stats[_]): Double = {
       assert(sample_size == s.sample_size)
       val values = xs.zip(s.xs)
       values.foldLeft(0: Double) {
@@ -12,20 +12,20 @@ case class Stats(name: String, mean: Double, dev: Double, med: Double, sample_si
   }
 }
 
-case class CompositeStats(xs: List[Stats]) {
+case class CompositeStats[T: Show](xs: List[Stats[T]]) {
   assert(xs != Nil)
-  val flat = StatsGenerator.stats(xs map (_.name) mkString ", ", xs flatMap (_.xs)).get
+  val flat = StatsGenerator.stats(xs map (_.of) map (implicitly[Show[T]].toString) mkString ", ", xs flatMap (_.xs)).get
   val mean = flat.mean
   val dev = flat.dev
   val sample_size = xs.map(_.sample_size).max
 }
 
-case class CompleteStats[T](of: T, quality: CompositeStats, attendance: Stats)
+case class CompleteStats[T](of: T, quality: CompositeStats[Question], attendance: Stats[Question])
 
 case class ClassInstance(person: Person, subject: Subject, classType: String)
 
 object StatsGenerator {
-  def stats[T: Numeric](name: String, xs: List[T]): Option[Stats] = xs match {
+  def stats[T: Numeric, U](of: U, xs: List[T]): Option[Stats[U]] = xs match {
     case Nil => None
     case xs =>
     val xds = xs map { x => implicitly[Numeric[T]].toDouble(x) }
@@ -34,23 +34,28 @@ object StatsGenerator {
         case (acc, x) => (x-mean)*(x-mean) + acc
       } / xs.size
       val med = xds.sorted.apply(xs.size / 2)
-      Some(Stats(name, mean, scala.math.sqrt(variance), med, xs.size, xds))
+      Some(Stats(of, mean, scala.math.sqrt(variance), med, xs.size, xds))
   }
 
-  def withDefaultStats(s: Option[Stats]) = {
-    s getOrElse Stats("(empty)", 0.0, 0.0, 0.0, 0, Nil)
+  def withDefaultStats[T](s: Option[Stats[T]]): Stats[T] = {
+    s getOrElse error("needed empty stats")
   }
 
-  def getStats(name: String, xs: List[Answer]): Stats = {
-    val optionStats = stats(name, xs map (_.value))
+  def getStats[T](of: T, xs: List[Answer]): Stats[T] = {
+    val optionStats = stats(of, xs map (_.value))
     withDefaultStats(optionStats)
   }
 
   def getCompleteStats[T](xs: List[Survey]): T => CompleteStats[T] = {
-    val quality: Map[String, List[Answer]] = (xs flatMap (_.values)) groupBy (_.question.value)
-    val attendance: List[Int] = xs flatMap (_.attendance)
+    val quality: Map[Question, List[Answer]] = (xs flatMap (_.values)) groupBy (_.qi.question)
+    val attendance: List[Answer] = xs flatMap (_.attendance)
+    val attendanceQuestion = {
+      val set = attendance.map(_.qi.question).toSet
+      assert(set.size == 1, set)
+      set.head
+    }
     val compositeStats = CompositeStats((quality map { case (key, answers) => getStats(key, answers) }).toList)
-    CompleteStats(_, compositeStats, withDefaultStats(stats("Obecność", attendance)))
+    CompleteStats(_, compositeStats, getStats(attendanceQuestion, attendance))
   }
 
   def getStatsByCriterium[T](xs: List[Survey], criterium: Survey => T): List[CompleteStats[T]] = {
@@ -78,24 +83,25 @@ object StatsGenerator {
     getStatsByCriterium(xs, x => map getOrElse(x.person.position, "inne"))
   }
 
-  def statsByQuestion(xs: List[Survey]): CompositeStats = {
+  def statsByQuestion(xs: List[Survey]): CompositeStats[Question] = {
     val answers: List[(String, Answer)] = xs flatMap (x => (x.values map (y => (x.id, y))))
-    val byQuestion: Map[String, List[(String, Answer)]] = answers groupBy (_._2.question.value)
+    val byQuestion: Map[Question, List[(String, Answer)]] = answers groupBy (_._2.qi.question)
     CompositeStats((byQuestion map {
       case (key, xs) => getStats(key, xs.sortBy{_._1}.map{_._2})
     }).toList)
   }
 
-  def statsByQuestionMatrix(xs: List[Survey]): PartialMatrix[(Stats, Stats)] = {
+  def statsByQuestionMatrix(xs: List[Survey]): PartialMatrix[(Stats[_], Stats[_])] = {
     def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
-    def statsByQuestion(q: String, xs: List[Survey]): Stats = {
-      val answers = for (x <- xs; a <- x.values if a.question.value == q) yield a
+    //FIXME: Change to Question from String
+    def statsByQuestion(q: String, xs: List[Survey]): Stats[String] = {
+      val answers = for (x <- xs; a <- x.values if a.qi.question.value == q) yield a
       getStats(q, answers)
     }
     val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
       as <- xs
       a <- as.values
-    } yield (a.question.value, as))
+    } yield (a.qi.question.value, as))
     val questions = answersByQuestion.keys.toList
     val values = for {
       q1 <- questions

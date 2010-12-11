@@ -14,15 +14,34 @@ case class Person(id: String, title: String, name: String, lastName: String, uni
 
 case class QuestionStats(allowed: Int, filled: Int)
 
-case class Question(id: String, order: String, value: String, stats: QuestionStats) {
-  override def toString = { value ++ " - " ++ order }
-}
+case class Question(value: String)
 
-case class Answer(question: Question, value: Int, description: String)
+case class QuestionInstance(question: Question, qs: QuestionStats, order: String)
 
-case class Survey(id: String, clazz: Class, person: Person, values: List[Answer], attendance: Option[Int], comment: Option[String])
+case class Answer(qi: QuestionInstance, value: Int, description: String)
+
+case class Survey(id: String, clazz: Class, person: Person, values: List[Answer], attendance: Option[Answer], comment: Option[String])
 
 /**
  * Class that has columns and rows indexed by labels but can have missing value for given cell.
  **/
 case class PartialMatrix[T](labels: List[String], values: Map[(String, String), T])
+
+import scala.xml.{NodeSeq, Text}
+
+trait Show[T] {
+  def toHTML(x: T): NodeSeq
+  def toString(x: T): String
+}
+
+object Show {
+  implicit object StringShow extends Show[String] {
+    def toHTML(x: String) = new Text(x)
+    def toString(x: String) = x
+  }
+
+  implicit object QuestionShow extends Show[Question] {
+    def toHTML(x: Question) = new Text(x.value)
+    def toString(x: Question) = x.value
+  }
+}

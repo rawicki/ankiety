@@ -56,16 +56,17 @@ class DataImporter(hashSalt: Option[String]) {
         val personId = extract(x, "id osoby")
         val classId = extract(x, "id zajęć")
         val questionId = extract(x, "id pytania")
-        val question = parseQuestion(x, questionStats((personId, classId, questionId)))
-        val answer = parseAnswer(question, x)
+        val question = parseQuestion(x)
+        val questionInstance = parseQuestionInstance(x, question, questionStats((personId, classId, questionId)))
+        val answer = parseAnswer(questionInstance, x)
         ((sheetId, parseClass(parseSubject(x), x), parsePerson(x, positions)), answer)
       }
       val aggregated_answers: Map[(String, Class, Person), List[Answer]] =
           (parsed_answers groupBy (_._1)) mapValues (_ map (_._2))
       (for (((sheetId, clazz, person), answers) <- aggregated_answers) yield {
-          val (attendance, quality) = answers partition (_.question.value.startsWith("Na ilu"))
+          val (attendance, quality) = answers partition (_.qi.question.value.startsWith("Na ilu"))
           val comment = comments get sheetId
-          Survey(sheetId, clazz, person, quality, attendance.headOption.map(_.value), comment)
+          Survey(sheetId, clazz, person, quality, attendance.headOption, comment)
       }).toList
     }
 
@@ -98,12 +99,14 @@ class DataImporter(hashSalt: Option[String]) {
       }
       Person(id, title, md5(name), md5(lastName), unitCode, unit, position)
     }
-    def parseQuestion(x: Vector[String], stats: QuestionStats): Question = {
-      val id = extract(x, "id pytania")
-      Question(id, extract(x, "kolejność"), extract(x, "treść pytania"), stats)
-    }
-    def parseAnswer(question: Question, x: Vector[String]): Answer =
-      Answer(question, extract(x, "wartość odpowiedzi").toInt, extract(x, "opis odpowiedzi"))
+    def parseQuestion(x: Vector[String]): Question =
+      //TODO: Find out what are semantics of id of a question and decide if they are relevant to us
+      //for now we are just skipping id entirely
+      Question(extract(x, "treść pytania"))
+    def parseQuestionInstance(x: Vector[String], q: Question, qs: QuestionStats): QuestionInstance =
+      QuestionInstance(q, qs, extract(x, "kolejność"))
+    def parseAnswer(qi: QuestionInstance, x: Vector[String]): Answer =
+      Answer(qi, extract(x, "wartość odpowiedzi").toInt, extract(x, "opis odpowiedzi"))
   }
 
   private object PositionsReader extends Reader("stanowiska.csv") {
