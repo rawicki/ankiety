@@ -24,7 +24,7 @@ class DataImporter(hashSalt: Option[String]) {
     case None => x
   }
 
-  private class Reader(filename: String) {
+  private class Reader(filenames: String*) {
     def exactFilename(filename: String): String = {
       val data = new java.io.File(filename)
       val examplename = "przyklad_" + filename
@@ -32,23 +32,26 @@ class DataImporter(hashSalt: Option[String]) {
 
       if(!data.exists() && example.exists()){
         println("Warning: file: " + filename + " not found. Using example file.")
-        return examplename
+        examplename
       } else {
         println("Using file: " + filename)
-        return filename
+        filename
       }
     }
 
     val (headers, records) = {
-      val (rawHeaders, records) = openDataFileRaw(exactFilename(filename))
-      rawHeaders.zipWithIndex.toMap -> records
+      val (manyHeaders, manyRecords) =
+        (for (filename <- filenames) yield openDataFileRaw(exactFilename(filename))).unzip
+      val rawHeaders = manyHeaders.head
+      assert(manyHeaders.forall(_ == rawHeaders), "Headers in read files %1s are incompatible: %2s".format(filenames, manyHeaders))
+      rawHeaders.zipWithIndex.toMap -> manyRecords.flatten.toList
     }
 
     def extract(x: Vector[String], name: String): String = x(headers(name))
     def extractOpt(x: Vector[String], name: String): Option[String] = (x.lift)(headers(name))
   }
 
-  private object SurveyReader extends Reader("1000-2009z_zajecia_wszystko.csv") {
+  private object SurveyReader extends Reader("1000-2009z_zajecia_wszystko.csv", "1000-2009l_zajecia_wszystko.csv") {
     val questionStats = QuestionStatsReader.read
     def read(comments: Map[String, String], positions: Map[String, Position]): List[Survey] = {
       val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- records) yield {
@@ -121,7 +124,7 @@ class DataImporter(hashSalt: Option[String]) {
     }
   }
 
-  private object CommentsReader extends Reader("1000-2009z_zajecia_komentarze.csv") {
+  private object CommentsReader extends Reader("1000-2009z_zajecia_komentarze.csv", "1000-2009l_zajecia_komentarze.csv") {
     def read: Map[String, String] = {
       (for (x <- records) yield {
         extract(x, "kod kartki") -> md5(extract(x, "treść komentarza"), 50)
@@ -129,7 +132,7 @@ class DataImporter(hashSalt: Option[String]) {
     }
   }
 
-  private object QuestionStatsReader extends Reader("1000-2009z_zajecia_grupuj_prowadzacy.csv") {
+  private object QuestionStatsReader extends Reader("1000-2009z_zajecia_grupuj_prowadzacy.csv", "1000-2009l_zajecia_grupuj_prowadzacy.csv") {
     def read: Map[(String, String, String), QuestionStats] = {
       (for (x <- records) yield {
         (extract(x, "id osoby"), extract(x, "id zajęć"), extract(x, "id pytania")) -> QuestionStats(extract(x, "uprawnieni").toInt, extract(x, "odp_na_pytanie").toInt)

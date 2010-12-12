@@ -46,7 +46,7 @@ object StatsGenerator {
     withDefaultStats(optionStats)
   }
 
-  def getCompleteStats[T, U: Show](xs: List[Survey], of: Answer => U): T => CompleteStats[T, U] = {
+  def getCompleteStats[T, U: Show](xs: List[Survey], of: Answer => U): T => Option[CompleteStats[T, U]] = {
     val quality: Map[U, List[Answer]] = (xs flatMap (_.values)) groupBy of
     val attendance: List[Answer] = xs flatMap (_.attendance)
     val attendanceQuestion = {
@@ -54,15 +54,19 @@ object StatsGenerator {
       assert(set.size == 1, set)
       set.head
     }
-    val compositeStats = CompositeStats((quality map { case (key, answers) => getStats(key, answers) }).toList)
-    CompleteStats(_, compositeStats, getStats(attendanceQuestion, attendance))
+    if (quality.isEmpty) {
+      _ => None
+    } else {
+      val compositeStats = CompositeStats((quality map { case (key, answers) => getStats(key, answers) }).toList)
+      x => Some(CompleteStats(x, compositeStats, getStats(attendanceQuestion, attendance)))
+    }
   }
 
   def getStatsByCriterium[T, U: Show](xs: List[Survey], criterium: Survey => T, of: Answer => U): List[CompleteStats[T, U]] = {
     val grouped: Map[T, List[Survey]] = xs groupBy criterium
     (grouped map {
       case (key, value) => getCompleteStats(value, of).apply(key)
-    }).toList
+    }).toList.flatten
   }
 
   def statsByClassType(xs: List[Survey]): List[CompleteStats[String, Question]] =
