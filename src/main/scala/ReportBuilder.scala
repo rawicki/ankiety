@@ -17,6 +17,8 @@ object ReportBuilder {
   def show_double(d: Double): String =
       "%2.3f" format d
 
+  def showPercent(d: Double): String = "%2.0f%%" format d
+
   def dumpForSparkbar(s: Stats[_], domain: Seq[Int]): NodeSeq =
       <span class="inlinesparkbar">{
           val grouped = s.xs.groupBy(identity) mapValues (_.size)
@@ -130,7 +132,14 @@ object ReportBuilder {
             }
         </tbody>
       </table>
-    def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq =
+    def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]], limit: Int): NodeSeq = {
+      def percent(n: Int, m: Int): Double = (n: Double) / m * 100
+      def samplePercent(quality: CompositeStats[QuestionInstance]) =
+        (quality.sample_size: Double) / quality.xs.map(_.of.qs.allowed).max * 100
+      def keep(x: CompleteStats[ClassInstance, QuestionInstance]) =
+        x.quality.sample_size >= 5 || samplePercent(x.quality) >= 50
+      val (preserved, discarded) = xs.partition(keep)
+      <h3>(odrzuconych {showPercent(percent(discarded.size, xs.size))})</h3> ++
       <table>
         <thead>
           <tr>
@@ -145,10 +154,9 @@ object ReportBuilder {
         </thead>
         <tbody>
           {
-            for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
-              val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
+            for (CompleteStats(ci @ ClassInstance(person, subject, classType), quality, attendance) <- preserved take limit) yield {
+              val comments = StatsGenerator.getCommentsForPersonSubject(answers, ci)
               val comments_block_id = getUniqueId.toString
-              val allowed = quality.xs.map(_.of.qs.allowed).max
               <tr>
                 <th>{ person }</th>
                 <td>{ subject }</td>
@@ -157,7 +165,7 @@ object ReportBuilder {
                 <td>{ show_attendance_stats(attendance) }</td>
                 <td>
                   { quality.sample_size }
-                  <span style="font-size: 0.6em">({show_double((quality.sample_size: Double) / allowed * 100)}%)</span>
+                  <span style="font-size: 0.6em">({showPercent(samplePercent(quality))})</span>
                 </td>
                 <td>{ show_comments_link(comments, comments_block_id) }</td>
               </tr>
@@ -170,6 +178,7 @@ object ReportBuilder {
           }
         </tbody>
       </table>
+    }
     val report =
       <html>
         <head>
@@ -244,19 +253,19 @@ object ReportBuilder {
           </div>
           <div class="center">
             <h2>15 najlepszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject take 15) }
+            { show_per_person_stats(statsByPersonSubject, 15) }
           </div>
           <div class="center">
             <h2>15 najgorszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.reverse take 15) }
+            { show_per_person_stats(statsByPersonSubject.reverse, 15) }
           </div>
           <div class="center">
             <h2>15 najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev) take 15) }
+            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev), 15) }
           </div>
           <div class="center">
             <h2>15 najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean) take 15) }
+            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), 15) }
           </div>
           <div class="center">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
