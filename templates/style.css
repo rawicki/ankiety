@@ -58,6 +58,12 @@ a {
     border-bottom: 1px gray dotted;
 }
 
+tr.class-type-header th {
+    background: #EEEEEE;
+    text-align: center;
+    padding: 2px;
+}
+
 tr.comments {
     display: none;
 }

@@ -92,6 +92,11 @@ object ReportBuilder {
     next_tag_id
   }
 
+  def samplePercent(quality: CompositeStats[QuestionInstance]) =
+    (quality.sample_size: Double) / quality.xs.map(_.of.qs.allowed).max * 100
+
+  def percent(n: Int, m: Int): Double = (n: Double) / m * 100
+
   def buildReport(answers: List[Survey]): NodeSeq = {
     val statsByQuestion = StatsGenerator.statsByQuestion(answers)
     val statsByClassType = StatsGenerator.statsByClassType(answers).sortBy(-_.quality.mean)
@@ -132,10 +137,31 @@ object ReportBuilder {
             }
         </tbody>
       </table>
+    def show_per_person_stats_rows(xs: List[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq = {
+      (for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
+        val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
+        val comments_block_id = getUniqueId.toString
+        <tr>
+          <th>{ person }</th>
+          <td>{ subject }</td>
+          <td>{ classType }</td>
+          <td>{ show_question_stats(quality) }</td>
+          <td>{ show_attendance_stats(attendance) }</td>
+          <td>
+            { quality.sample_size }
+            <span style="font-size: 0.6em">({showPercent(samplePercent(quality))})</span>
+          </td>
+          <td>{ show_comments_link(comments, comments_block_id) }</td>
+        </tr>
+        <tr class="comments" id={ "comments-" ++ comments_block_id }>
+          <td colspan="7">
+            { show_comments(comments) }
+          </td>
+        </tr>
+      }).flatten
+    }
+
     def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]], limit: Int): NodeSeq = {
-      def percent(n: Int, m: Int): Double = (n: Double) / m * 100
-      def samplePercent(quality: CompositeStats[QuestionInstance]) =
-        (quality.sample_size: Double) / quality.xs.map(_.of.qs.allowed).max * 100
       def keep(x: CompleteStats[ClassInstance, QuestionInstance]) =
         x.quality.sample_size >= 5 || samplePercent(x.quality) >= 50
       val (preserved, discarded) = xs.partition(keep)
@@ -153,27 +179,12 @@ object ReportBuilder {
           </tr>
         </thead>
         <tbody>
-          {
-            for (CompleteStats(ci @ ClassInstance(person, subject, classType), quality, attendance) <- preserved take limit) yield {
-              val comments = StatsGenerator.getCommentsForPersonSubject(answers, ci)
-              val comments_block_id = getUniqueId.toString
-              <tr>
-                <th>{ person }</th>
-                <td>{ subject }</td>
-                <td>{ classType }</td>
-                <td>{ show_question_stats(quality) }</td>
-                <td>{ show_attendance_stats(attendance) }</td>
-                <td>
-                  { quality.sample_size }
-                  <span style="font-size: 0.6em">({showPercent(samplePercent(quality))})</span>
-                </td>
-                <td>{ show_comments_link(comments, comments_block_id) }</td>
-              </tr>
-              <tr class="comments" id={ "comments-" ++ comments_block_id }>
-                <td colspan="7">
-                  { show_comments(comments) }
-                </td>
-              </tr>
+          { val categorized = xs.groupBy(_.of.classType) // Assuming groupBy is stable!!!
+            for((classType, cxs) <- categorized) yield {
+                <tr class="class-type-header">
+                  <th colspan="7">Zajęcia typu: { classType }</th>
+                </tr> ++
+                show_per_person_stats_rows(cxs take limit)
             }
           }
         </tbody>
@@ -253,19 +264,19 @@ object ReportBuilder {
           </div>
           <div class="center">
             <h2>15 najlepszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject, 15) }
+            { show_per_person_stats(statsByPersonSubject, 10) }
           </div>
           <div class="center">
             <h2>15 najgorszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.reverse, 15) }
+            { show_per_person_stats(statsByPersonSubject.reverse, 10) }
           </div>
           <div class="center">
             <h2>15 najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev), 15) }
+            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev), 10) }
           </div>
           <div class="center">
             <h2>15 najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), 15) }
+            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), 10) }
           </div>
           <div class="center">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
