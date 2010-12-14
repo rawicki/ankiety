@@ -144,7 +144,6 @@ object ReportBuilder {
         <tr>
           <th>{ person }</th>
           <td>{ subject }</td>
-          <td>{ classType }</td>
           <td>{ show_question_stats(quality) }</td>
           <td>{ show_attendance_stats(attendance) }</td>
           <td>
@@ -170,7 +169,6 @@ object ReportBuilder {
           <tr>
             <th>Osoba</th>
             <th>Przedmiot</th>
-            <th>Typ</th>
             <th>Oceny</th>
             <th>Obecność (%)</th>
             <th>Próbka</th>
@@ -183,7 +181,7 @@ object ReportBuilder {
             (preserved, discarded) = cxs partition keep
           } yield {
             <tr class="class-type-header">
-              <th colspan="7">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
+              <th colspan="6">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
             </tr> ++
             show_per_person_stats_rows(preserved take limit)
           }
