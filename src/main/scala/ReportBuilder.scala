@@ -164,8 +164,7 @@ object ReportBuilder {
     def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]], limit: Int): NodeSeq = {
       def keep(x: CompleteStats[ClassInstance, QuestionInstance]) =
         x.quality.sample_size >= 5 || samplePercent(x.quality) >= 50
-      val (preserved, discarded) = xs.partition(keep)
-      <h3>(odrzuconych {showPercent(percent(discarded.size, xs.size))})</h3> ++
+      val categorized = xs groupBy (_.of.classType)
       <table>
         <thead>
           <tr>
@@ -178,16 +177,17 @@ object ReportBuilder {
             <th>Komentarze</th>
           </tr>
         </thead>
-        <tbody>
-          { val categorized = preserved.groupBy(_.of.classType) // Assuming groupBy is stable!!!
-            for((classType, cxs) <- categorized) yield {
-                <tr class="class-type-header">
-                  <th colspan="7">Zajęcia typu: { classType }</th>
-                </tr> ++
-                show_per_person_stats_rows(cxs take limit)
-            }
+        <tbody>{
+          for {
+            (classType, cxs) <- categorized
+            (preserved, discarded) = cxs partition keep
+          } yield {
+            <tr class="class-type-header">
+              <th colspan="7">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
+            </tr> ++
+            show_per_person_stats_rows(preserved take limit)
           }
-        </tbody>
+        }</tbody>
       </table>
     }
     val report =
