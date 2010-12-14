@@ -179,7 +179,7 @@ object ReportBuilder {
           </tr>
         </thead>
         <tbody>
-          { val categorized = xs.groupBy(_.of.classType) // Assuming groupBy is stable!!!
+          { val categorized = preserved.groupBy(_.of.classType) // Assuming groupBy is stable!!!
             for((classType, cxs) <- categorized) yield {
                 <tr class="class-type-header">
                   <th colspan="7">Zajęcia typu: { classType }</th>
