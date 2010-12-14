@@ -98,6 +98,7 @@ object ReportBuilder {
   def percent(n: Int, m: Int): Double = (n: Double) / m * 100
 
   def buildReport(answers: List[Survey]): NodeSeq = {
+    val rankingSize = 10
     val statsByQuestion = StatsGenerator.statsByQuestion(answers)
     val statsByClassType = StatsGenerator.statsByClassType(answers).sortBy(-_.quality.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).sortBy(-_.quality.mean)
@@ -261,20 +262,20 @@ object ReportBuilder {
             { show_per_category_stats(statsByClassType, "Typ zajęć") }
           </div>
           <div class="center">
-            <h2>15 najlepszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject, 10) }
+            <h2>{rankingSize} najlepszych wyników (osoba, przedmiot)</h2>
+            { show_per_person_stats(statsByPersonSubject, rankingSize) }
           </div>
           <div class="center">
-            <h2>15 najgorszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.reverse, 10) }
+            <h2>{rankingSize} najgorszych wyników (osoba, przedmiot)</h2>
+            { show_per_person_stats(statsByPersonSubject.reverse, rankingSize) }
           </div>
           <div class="center">
-            <h2>15 najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev), 10) }
+            <h2>{rankingSize} najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
+            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev), rankingSize) }
           </div>
           <div class="center">
-            <h2>15 najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), 10) }
+            <h2>{rankingSize} najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
+            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), rankingSize) }
           </div>
           <div class="center">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
