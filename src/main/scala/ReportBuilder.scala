@@ -144,7 +144,7 @@ object ReportBuilder {
         val comments_block_id = getUniqueId.toString
         <tr>
           <th>{ person }</th>
-          <td>{ subject }</td>
+          <td>{ implicitly[Show[Subject]].toHTML(subject) }</td>
           <td>{ show_question_stats(quality) }</td>
           <td>{ show_attendance_stats(attendance) }</td>
           <td>

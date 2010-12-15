@@ -1,8 +1,6 @@
 package surveys.SurveyClasses
 
-case class Subject(period: String, code: String, description: String){
-  override def toString = description
-}
+case class Subject(period: String, code: String, description: String)
 
 case class Class(subject: Subject, id: String, code: String, description: String)
 
@@ -47,5 +45,9 @@ object Show {
   implicit object QuestionInstanceShow extends Show[QuestionInstance] {
     def toHTML(x: QuestionInstance) = QuestionShow.toHTML(x.question)
     def toString(x: QuestionInstance) = QuestionShow.toString(x.question)
+  }
+  implicit object SubjectShow extends Show[Subject] {
+    def toHTML(x: Subject) = new Text(x.description)
+    def toString(x: Subject) = x.description
   }
 }
