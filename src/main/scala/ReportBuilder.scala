@@ -40,7 +40,7 @@ object ReportBuilder {
 
   def show_comments_link(comments: List[(String, String)], id: String): NodeSeq =
     if(comments.nonEmpty){
-        <a href="#" onClick={ "$(\"#comments-" ++ id ++ "\").toggle(500); return(false);" }>
+        <a href="#" onClick={ "$(\"#comments-" ++ id ++ "\").toggle(100); return(false);" }>
           Pokaż({ comments.size })
         </a>
     } else { new Text("Brak") }
