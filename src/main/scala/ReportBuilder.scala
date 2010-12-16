@@ -4,6 +4,7 @@ import scala.xml._
 
 import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
+import surveys.SubjectCategories.{Category, Categorization}
 
 object ReportBuilder {
   var next_tag_id: Int = 1
@@ -97,8 +98,9 @@ object ReportBuilder {
 
   def percent(n: Int, m: Int): Double = (n: Double) / m * 100
 
-  def buildReport(answers: List[Survey]): NodeSeq = {
+  def buildReport(answers: List[Survey], categorization: Categorization): NodeSeq = {
     val rankingSize = 10
+    val rankingPercent = 25
     val statsByQuestion = StatsGenerator.statsByQuestion(answers)
     val statsByClassType = StatsGenerator.statsByClassType(answers).sortBy(-_.quality.mean)
     val statsByTitle = StatsGenerator.statsByTitle(answers).sortBy(-_.quality.mean)
@@ -166,10 +168,16 @@ object ReportBuilder {
       }).flatten
     }
 
-    def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]], limit: Int): NodeSeq = {
+    def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]], limitPercent: Int)
+      (implicit ord: Ordering[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq = {
       def keep(x: CompleteStats[ClassInstance, QuestionInstance]) =
-        x.quality.sample_size >= 5 || samplePercent(x.quality) >= 50
-      val categorized = xs groupBy (_.of.classType)
+        x.quality.sample_size >= 5 //|| samplePercent(x.quality) >= 50
+      def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = {
+        val n = scala.math.ceil((p * xs.size: Double) / 100).toInt
+        val (ys1, ys2) = xs.sorted splitAt n
+        val last = ys1.last
+        ys1 ++ (ys2 takeWhile (ord.equiv(last, _)))
+      }
       <table>
         <thead>
           <tr>
@@ -184,17 +192,28 @@ object ReportBuilder {
         </thead>
         <tbody>{
           for {
-            (classType, cxs) <- categorized
+            (classType, cxs) <- xs groupBy (_.of.classType)
             (preserved, discarded) = cxs partition keep
           } yield {
             <tr class="class-type-header">
               <th colspan="7">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
             </tr> ++
-            show_per_person_stats_rows(preserved take limit)
+            show_per_person_stats_rows(takeTopPercent(preserved, limitPercent))
           }
         }</tbody>
       </table>
     }
+
+    def showCategorized(xs: List[CompleteStats[ClassInstance, QuestionInstance]],
+                       title: Category => String,
+                       show: List[CompleteStats[ClassInstance, QuestionInstance]] => NodeSeq): NodeSeq = {
+      implicit val ordering = categorization.ordering
+      val categorized = (xs groupBy (x => categorization assign (x.of.subject))).toList sortBy (_._1)
+      (for ((category, cxs) <- categorized) yield {
+         <h3>{title(category)}</h3> ++ show(cxs)
+      }).flatten
+    }
+
     val report =
       <html>
         <head>
@@ -268,20 +287,32 @@ object ReportBuilder {
             { show_per_category_stats(statsByClassType, "Typ zajęć") }
           </div>
           <div class="center">
-            <h2>{rankingSize} najlepszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject, rankingSize) }
+            <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
+            {
+              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.quality.mean).reverse
+              showCategorized(statsByPersonSubject, _.title(rankingPercent), show_per_person_stats(_, rankingPercent))
+            }
           </div>
           <div class="center">
             <h2>{rankingSize} najgorszych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.reverse, rankingSize) }
+            {
+              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.quality.mean)
+              show_per_person_stats(statsByPersonSubject, rankingSize)
+            }
           </div>
           <div class="center">
             <h2>{rankingSize} najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(-_.quality.dev), rankingSize) }
+            {
+              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.quality.dev).reverse
+              show_per_person_stats(statsByPersonSubject, rankingSize)
+            }
           </div>
           <div class="center">
             <h2>{rankingSize} najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
-            { show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), rankingSize) }
+            {
+              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.attendance.mean)
+              show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), rankingSize)
+            }
           </div>
           <div class="center">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
