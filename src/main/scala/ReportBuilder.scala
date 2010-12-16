@@ -139,6 +139,7 @@ object ReportBuilder {
         </tbody>
       </table>
     def show_per_person_stats_rows(xs: List[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq = {
+      val understandingQuestion = Question("Czy zajęcia były prowadzone w sposób zrozumiały?")
       (for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
         val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
         val comments_block_id = getUniqueId.toString
@@ -146,6 +147,10 @@ object ReportBuilder {
           <th>{ implicitly[Show[Person]].toHTML(person) }</th>
           <td>{ implicitly[Show[Subject]].toHTML(subject) }</td>
           <td>{ show_question_stats(quality) }</td>
+          <td>{
+            val s = quality.xs.find(_.of.question == understandingQuestion).get
+            show_mean(s) ++ dumpForSparkbar(s, 1 to 7)
+          }</td>
           <td>{ show_attendance_stats(attendance) }</td>
           <td>
             { quality.sample_size }
@@ -171,6 +176,7 @@ object ReportBuilder {
             <th>Osoba</th>
             <th>Przedmiot</th>
             <th>Oceny</th>
+            <th>Średnia zrozumiałość</th>
             <th>Obecność (%)</th>
             <th>Próbka</th>
             <th>Komentarze</th>
@@ -182,7 +188,7 @@ object ReportBuilder {
             (preserved, discarded) = cxs partition keep
           } yield {
             <tr class="class-type-header">
-              <th colspan="6">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
+              <th colspan="7">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
             </tr> ++
             show_per_person_stats_rows(preserved take limit)
           }
