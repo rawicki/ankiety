@@ -233,7 +233,9 @@ object ReportBuilder {
         </head>
         <body>
           <!-- github ribbon -->
-          <a href="http://github.com/rawicki/ankiety"><img style="position: absolute; top: 0; left: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub" /></a>
+          <a href="http://github.com/rawicki/ankiety">
+            <img style="position: absolute; top: 0; left: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub" />
+          </a>
           <h1>Wyniki ankiet 2009Z/2009L</h1>
           <h3>(wypełnionych ankiet: {answers.size})</h3>
           <div class="center">
