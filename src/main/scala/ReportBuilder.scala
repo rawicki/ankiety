@@ -101,7 +101,6 @@ object ReportBuilder {
   def percent(n: Int, m: Int): Double = (n: Double) / m * 100
 
   def buildReport(answers: List[Survey], categorization: Categorization): NodeSeq = {
-    val rankingSize = 10
     val rankingPercent = 25
     val statsByQuestion = StatsGenerator.statsByQuestion(answers)
     val statsByClassType = StatsGenerator.statsByClassType(answers).sortBy(-_.quality.mean)
@@ -294,24 +293,24 @@ object ReportBuilder {
             }
           </div>
           <div class="center">
-            <h2>{rankingSize} najgorszych wyników (osoba, przedmiot)</h2>
+            <h2>{rankingPercent}% najgorszych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean)
-              show_per_person_stats(statsByPersonSubject, rankingSize)
+              show_per_person_stats(statsByPersonSubject, rankingPercent)
             }
           </div>
           <div class="center">
-            <h2>{rankingSize} najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
+            <h2>{rankingPercent}% najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.dev).reverse
-              show_per_person_stats(statsByPersonSubject, rankingSize)
+              show_per_person_stats(statsByPersonSubject, rankingPercent)
             }
           </div>
           <div class="center">
-            <h2>{rankingSize} najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
+            <h2>{rankingPercent}% najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
-              show_per_person_stats(statsByPersonSubject, rankingSize)
+              show_per_person_stats(statsByPersonSubject, rankingPercent)
             }
           </div>
           <div class="center">
