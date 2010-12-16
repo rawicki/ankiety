@@ -143,7 +143,7 @@ object ReportBuilder {
         val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
         val comments_block_id = getUniqueId.toString
         <tr>
-          <th>{ person }</th>
+          <th>{ implicitly[Show[Person]].toHTML(person) }</th>
           <td>{ implicitly[Show[Subject]].toHTML(subject) }</td>
           <td>{ show_question_stats(quality) }</td>
           <td>{ show_attendance_stats(attendance) }</td>

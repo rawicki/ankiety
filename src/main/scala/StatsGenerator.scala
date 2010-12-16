@@ -73,7 +73,7 @@ object StatsGenerator {
     getStatsByCriterium(xs, _.clazz.code, _.qi.question)
 
   def statsByTitle(xs: List[Survey]): List[CompleteStats[String, Question]] =
-    getStatsByCriterium(xs, _.person.title, _.qi.question)
+    getStatsByCriterium(xs, _.person.title getOrElse "(brak)", _.qi.question)
 
   def statsByPosition(xs: List[Survey]): List[CompleteStats[String, Question]] =
     getStatsByCriterium(xs, _.person.position, _.qi.question)

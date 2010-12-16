@@ -86,18 +86,21 @@ class DataImporter(hashSalt: Option[String]) {
       val lastName = extract(x, "nazwisko")
       val unitCode = extract(x, "kod jednostki")
       val unit = extract(x, "jednostka")
-      val title = if (rawTitle == "")
-      {
-        warnOnce("parsePerson: no title for \"" ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
-        "(brak)"
-      } else if (rawTitle == "prof. dr hab.") "prof." else rawTitle
+      val title = rawTitle match {
+        case "" => {
+          warnOnce("parsePerson: no title for %1s %2s (id %2s)".format(name, lastName, id))
+          None
+        }
+        case "prof. dr hab." => Some("prof.")
+        case x => Some(x)
+      }
       val position = positions get id match {
         case Some(Position(_, p_name, p_lastName, p_position, opt_unit)) =>
           if (name != p_name) warnOnce("parsePerson: name mismatch: \"" ++ name ++ "\" != \"" ++ p_name ++ "\" (id " ++ id ++ ")")
           if (lastName != p_lastName) warnOnce("parsePerson: lastName mismatch: \"" ++ lastName ++ "\" != \"" ++ p_lastName ++ "\" (id " ++ id ++ ")")
           p_position
         case None =>
-          warnOnce("parsePerson: no position for \"" ++ title ++ " " ++ name ++ " " ++ lastName ++ "\" (id " ++ id ++ ")")
+          warnOnce("parsePerson: no position for %1s %2s (id %2s)".format(name, lastName, id))
           "(brak)"
       }
       Person(id, title, md5(name), md5(lastName), unitCode, unit, position)

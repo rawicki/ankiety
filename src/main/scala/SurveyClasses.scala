@@ -6,9 +6,7 @@ case class Class(subject: Subject, id: String, code: String, description: String
 
 case class Position(id: String, name: String, lastName: String, position: String, unit: Option[String])
 
-case class Person(id: String, title: String, name: String, lastName: String, unitCode: String, unit: String, position: String){
-  override def toString = { title ++ " " ++ name ++ " " ++ lastName }
-}
+case class Person(id: String, title: Option[String], name: String, lastName: String, unitCode: String, unit: String, position: String)
 
 case class QuestionStats(allowed: Int, filled: Int)
 
@@ -49,5 +47,15 @@ object Show {
   implicit object SubjectShow extends Show[Subject] {
     def toHTML(x: Subject) = new Text(x.description)
     def toString(x: Subject) = x.description
+  }
+  implicit object PersonShow extends Show[Person] {
+    def toHTML(x: Person) = {
+      val title = x.title map (x => <span style="font-size: 0.8em;">{x} </span>) getOrElse NodeSeq.Empty
+      title ++ new Text("%1s %2s".format(x.name, x.lastName))
+    }
+    def toString(x: Person) = {
+      val title = x.title map (_ + " ") getOrElse ""
+      title + "1%s %2s".format(x.name, x.lastName)
+    }
   }
 }
