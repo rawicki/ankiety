@@ -310,8 +310,8 @@ object ReportBuilder {
           <div class="center">
             <h2>{rankingSize} najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             {
-              show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), rankingSize)
               implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
+              show_per_person_stats(statsByPersonSubject, rankingSize)
             }
           </div>
           <div class="center">
