@@ -7,6 +7,8 @@ import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstan
 import surveys.SubjectCategories.{Category, Categorization}
 
 object ReportBuilder {
+  type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
+
   var next_tag_id: Int = 1
 
   def show_mean[T: Show](s: Stats[T]): NodeSeq =
@@ -140,7 +142,7 @@ object ReportBuilder {
             }
         </tbody>
       </table>
-    def show_per_person_stats_rows(xs: List[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq = {
+    def show_per_person_stats_rows(xs: List[ClassStats]): NodeSeq = {
       val understandingQuestion = Question("Czy zajęcia były prowadzone w sposób zrozumiały?")
       (for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
         val comments = StatsGenerator.getCommentsForPersonSubject(answers, classInstance)
@@ -168,10 +170,8 @@ object ReportBuilder {
       }).flatten
     }
 
-    def show_per_person_stats(xs: List[CompleteStats[ClassInstance, QuestionInstance]], limitPercent: Int)
-      (implicit ord: Ordering[CompleteStats[ClassInstance, QuestionInstance]]): NodeSeq = {
-      def keep(x: CompleteStats[ClassInstance, QuestionInstance]) =
-        x.quality.sample_size >= 5 //|| samplePercent(x.quality) >= 50
+    def show_per_person_stats(xs: List[ClassStats], limitPercent: Int)(implicit ord: Ordering[ClassStats]): NodeSeq = {
+      def keep(x: ClassStats) = x.quality.sample_size >= 5
       def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = {
         val n = scala.math.ceil((p * xs.size: Double) / 100).toInt
         val (ys1, ys2) = xs.sorted splitAt n
@@ -204,9 +204,7 @@ object ReportBuilder {
       </table>
     }
 
-    def showCategorized(xs: List[CompleteStats[ClassInstance, QuestionInstance]],
-                       title: Category => String,
-                       show: List[CompleteStats[ClassInstance, QuestionInstance]] => NodeSeq): NodeSeq = {
+    def showCategorized(xs: List[ClassStats], title: Category => String, show: List[ClassStats] => NodeSeq): NodeSeq = {
       implicit val ordering = categorization.ordering
       val categorized = (xs groupBy (x => categorization assign (x.of.subject))).toList sortBy (_._1)
       (for ((category, cxs) <- categorized) yield {
@@ -291,29 +289,29 @@ object ReportBuilder {
           <div class="center">
             <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
             {
-              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.quality.mean).reverse
+              implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
               showCategorized(statsByPersonSubject, _.title(rankingPercent), show_per_person_stats(_, rankingPercent))
             }
           </div>
           <div class="center">
             <h2>{rankingSize} najgorszych wyników (osoba, przedmiot)</h2>
             {
-              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.quality.mean)
+              implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean)
               show_per_person_stats(statsByPersonSubject, rankingSize)
             }
           </div>
           <div class="center">
             <h2>{rankingSize} najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
             {
-              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.quality.dev).reverse
+              implicit val ord = Ordering.by[ClassStats, Double](_.quality.dev).reverse
               show_per_person_stats(statsByPersonSubject, rankingSize)
             }
           </div>
           <div class="center">
             <h2>{rankingSize} najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             {
-              implicit val ord = Ordering.by[CompleteStats[ClassInstance, QuestionInstance], Double](_.attendance.mean)
               show_per_person_stats(statsByPersonSubject.sortBy(_.attendance.mean), rankingSize)
+              implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
             }
           </div>
           <div class="center">
