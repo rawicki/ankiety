@@ -163,7 +163,7 @@ object ReportBuilder {
           <td>{ show_comments_link(comments, comments_block_id) }</td>
         </tr>
         <tr class="comments" id={ "comments-" ++ comments_block_id }>
-          <td colspan="7">
+          <td colspan="8">
             { show_comments(comments) }
           </td>
         </tr>
