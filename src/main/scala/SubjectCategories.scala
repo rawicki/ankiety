@@ -4,9 +4,9 @@ import surveys.SurveyClasses.Subject
 
 trait Category {
   def contains(x: Subject): Boolean
-  protected def byPrefix(xs: Set[String]): Subject => Boolean = 
+  protected def byPrefix(xs: Set[String]): Subject => Boolean =
     x => xs map (x.code startsWith _) exists identity
-    
+
   val name: String
   def title(percent: Int): String
 }
@@ -17,8 +17,27 @@ trait Categorization {
   val ordering: Ordering[Category] = Ordering.by(categories indexOf (_))
 }
 
+object OneCatCategorization extends Categorization {
+  private val przedmioty = new Category {
+      val name = "wszystkie przedmioty"
+      def contains(x: Subject) = true
+      def title(percent: Int) = "%d%% spośród wszystkich przedmiotów".format(percent)
+  }
+
+  val categories = przedmioty :: Nil
+
+  def assign(x: Subject): Category = {
+    categories filter (_ contains x) match {
+      case x :: Nil => x
+      case Nil => error("Subject %1s was not matched by any category".format(x))
+      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
+    }
+  }
+
+}
+
 object CSCategorization extends Categorization {
-  
+
   private val kursowe = new Category {
     val name = "kursowe"
     def contains(x: Subject) = {
@@ -47,7 +66,7 @@ object CSCategorization extends Categorization {
       ) contains x.code
     def title(percent: Int) = "%d%% spośród przedmiotów stałych obieralnych".format(percent)
   }
-  
+
   private val obieralne = new Category {
     val name = "obieralne"
     def contains(x: Subject) = {
@@ -59,12 +78,12 @@ object CSCategorization extends Categorization {
 
   private val bioinf = new Category {
     val name = "bioinformatyczne"
-    def contains(x: Subject) = 
+    def contains(x: Subject) =
       Set(
         "1000-711WIN", //Wstęp do informatyki (bioinf)
         "1000-712ASD", //Algorytmy i struktury danych (bioinf)
-        "1000-713PPO", //Programowanie i projektowanie obiektowe (bioinf) 
-        "1000-714SAD"  //Statystyczna analiza danych (bioinf) 
+        "1000-713PPO", //Programowanie i projektowanie obiektowe (bioinf)
+        "1000-714SAD"  //Statystyczna analiza danych (bioinf)
       ) contains x.code
     def title(percent: Int) = "%d%% spośród przedmiotów na bioinformatyce".format(percent)
   }
