@@ -66,7 +66,11 @@ class PublishingReport(answers: List[Survey], categorization: Categorization)
           </div>
           <div class="center">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
-            { scatterPlot(quality zip relativeFilled) }
+            { scatterPlot(quality zip relativeFilled, 0) }
+          </div>
+          <div class="center">
+            <h2>Procent wypełnionych ankiet z komentarzami a procent wypełnionych ankiet</h2>
+            { scatterPlot(commentsFilled zip relativeFilled, 1) }
           </div>
         </body>
       </html>

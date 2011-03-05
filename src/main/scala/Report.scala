@@ -41,6 +41,16 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
       val qs = answer.qi.qs
     } yield (qs.filled: Double) / qs.allowed * 100
   } yield (qualityStats.mean, ratios.max)).unzip
+  val commentsFilled = for {
+         CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
+    val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
+    val commentsCount = surveys.filter(_.comment != None).size
+    val allowedCount = (for {
+        x <- surveys
+        answer <- x.values
+        val qs = answer.qi.qs
+      } yield (qs.allowed)).max
+  } yield (commentsCount: Double) / allowedCount * 100
 
   val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
 
@@ -112,14 +122,15 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
     </table>
   }
 
-  def scatterPlot(data: List[(Double, Double)]): NodeSeq = {
-    <div id="placeholder" style="width:600px;height:300px;margin: auto;"></div>
+  def scatterPlot(data: List[(Double, Double)], id: Integer): NodeSeq = {
+    val plotId = "placeholder-%d" format id
+    <div id={plotId} style="width:600px;height:300px;margin: auto;"></div>
     <script id="source" language="javascript" type="text/javascript">
       $(function () {{
         var d = {
           (data map { case (x, y) => "[%1s, %2s]".format(x.toString, y.toString) }).mkString("[", ",", "]")
         };
-        $.plot($({Unparsed("\"#placeholder\"")}), [
+        $.plot($({Unparsed("\"#" + plotId + "\"")}), [
             {{
                 data: d,
                 points: {{show: true}}
