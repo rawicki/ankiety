@@ -8,10 +8,10 @@ import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  O
 
 object GenerateReport {
   def generateReport(answers: List[Survey], title: String, c: Categorization) {
-    val report = CompleteReport.buildReport(answers, c)
+    val report = new CompleteReport(answers, c)
 
     val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
-    fw.write(report.toString)
+    fw.write(report.buildReport.toString)
     fw.close()
   }
 
