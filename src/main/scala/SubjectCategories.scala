@@ -36,6 +36,36 @@ object OneCatCategorization extends Categorization {
 
 }
 
+object MathCategorization extends Categorization {
+  private val fakultatywne = new Category {
+      val name = "fakultatywne"
+      def contains(x: Subject) = x.code startsWith "1000-13"
+      def title(percent: Int) = "%d%% spośród przedmiotów fakultatywnych".format(percent)
+  }
+
+  private val kursowe = new Category {
+      val name = "kursowe"
+      def contains(x: Subject) = x.code startsWith "1000-11"
+      def title(percent: Int) = "%d%% spośród przedmiotów kursowych".format(percent)
+  }
+
+  private val monograficzne = new Category {
+      val name = "monograficzne"
+      def contains(x: Subject) = x.code startsWith "1000-1M"
+      def title(percent: Int) = "%d%% spośród przedmiotów monograficznych".format(percent)
+  }
+
+  val categories = kursowe :: fakultatywne :: monograficzne :: Nil
+
+  def assign(x: Subject): Category = {
+    categories filter (_ contains x) match {
+      case x :: Nil => x
+      case Nil => error("Subject %1s was not matched by any category".format(x))
+      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
+    }
+  }
+}
+
 object CSCategorization extends Categorization {
 
   private val kursowe = new Category {

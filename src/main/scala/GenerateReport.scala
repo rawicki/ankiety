@@ -4,7 +4,7 @@ import scala.xml._
 import surveys.SurveyClasses.{Survey, Subject}
 import surveys.DataImporter.Data
 import surveys.ReportBuilder.{PublishingReport, CompleteReport}
-import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  OneCatCategorization}
+import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  OneCatCategorization, MathCategorization}
 
 object GenerateReport {
   def generateReport(answers: List[Survey], title: String, c: Categorization) {
@@ -21,7 +21,7 @@ object GenerateReport {
 
 
     generateReport(answers, "Report", OneCatCategorization)
-    generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")), "Mathematics", OneCatCategorization)
     generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-2")), "ComputerScience", CSCategorization)
+    generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")), "Mathematics", MathCategorization)
   }
 }
