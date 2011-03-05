@@ -130,7 +130,6 @@ class Data(hashSalt: Option[String], filePrefixes: List[String]) {
   private object CommentsReader extends Reader(filePrefixes.map(_+"_zajecia_komentarze.csv"): _*) {
     def read: Map[String, String] = {
       (for (x <- records) yield {
-        println(x)
         extract(x, "kod kartki") -> md5(extract(x, "treść komentarza"), 50)
       }).toMap
     }
