@@ -15,13 +15,32 @@ object GenerateReport {
     fw.close()
   }
 
-  def main(args: Array[String]){
+  def main(args: Array[String]) {
     val salt = if (args contains "md5") Some((1 to 10).map(_ => scala.util.Random.nextPrintableChar).mkString("")) else None
-    val answers = (new Data(salt)).readSurveys
+    val prefixes = findDataPrefixes
+    prefixes foreach { x =>
+      println("Running generate report with prefix " + x)
+      val answers = (new Data(salt, x :: Nil)).readSurveys
+      generateReport(answers, x + "_Report", OneCatCategorization)
+      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")), x + "_Mathematics", MathCategorization)
+      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-2")), x + "_ComputerScience", CSCategorization)
+    }
+  }
 
+  def findDataPrefixes: List[String] = {
+    val dataDir = new java.io.File("data/")
+    if (!dataDir.exists)
+      error("data directory doesn't exist")
+    val prefixes = for (x <- dataDir.list if x endsWith "_zajecia_wszystko.csv") yield
+      x stripSuffix "_zajecia_wszystko.csv"
+    prefixes.toList.distinct
+  }
 
-    generateReport(answers, "Report", OneCatCategorization)
-    generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-2")), "ComputerScience", CSCategorization)
-    generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")), "Mathematics", MathCategorization)
+  def sameYearPrefixes(xs: List[String]): List[List[String]] = {
+    val yearPattern = """.*1000-([0-9]+)[lz].*""".r
+    (xs groupBy { x =>
+      val yearPattern(year) = x
+      year
+    }).values.toList
   }
 }

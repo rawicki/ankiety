@@ -3,7 +3,7 @@ package surveys.DataImporter
 import scala.io.Source
 import surveys.SurveyClasses._
 
-class Data(hashSalt: Option[String]) {
+class Data(hashSalt: Option[String], filePrefixes: List[String]) {
   def openDataFileRaw(filename: String): (Vector[String], List[Vector[String]]) = {
     val reader = new com.csvreader.CsvReader(filename, ';', java.nio.charset.Charset.forName("UTF-8"))
     reader.readHeaders
@@ -26,7 +26,7 @@ class Data(hashSalt: Option[String]) {
 
   private class Reader(filenames: String*) {
     def exactFilename(filename: String): String = {
-      val data = new java.io.File(filename)
+      val data = new java.io.File("data", filename)
       val examplename = "przyklad_" + filename
       val example = new java.io.File(examplename)
 
@@ -35,7 +35,7 @@ class Data(hashSalt: Option[String]) {
         examplename
       } else {
         println("Using file: " + filename)
-        filename
+        "data/" + filename
       }
     }
 
@@ -51,7 +51,7 @@ class Data(hashSalt: Option[String]) {
     def extractOpt(x: Vector[String], name: String): Option[String] = (x.lift)(headers(name))
   }
 
-  private object SurveyReader extends Reader("1000-2009z_zajecia_wszystko.csv", "1000-2009l_zajecia_wszystko.csv") {
+  private object SurveyReader extends Reader(filePrefixes.map(_+"_zajecia_wszystko.csv"): _*) {
     val questionStats = QuestionStatsReader.read
     def read(comments: Map[String, String], positions: Map[String, Position]): List[Survey] = {
       val parsed_answers: List[((String, Class, Person), Answer)] = for (x <- records) yield {
@@ -115,7 +115,7 @@ class Data(hashSalt: Option[String]) {
       Answer(qi, extract(x, "wartość odpowiedzi").toInt, extract(x, "opis odpowiedzi"))
   }
 
-  private object PositionsReader extends Reader("stanowiska.csv") {
+  private object PositionsReader extends Reader(filePrefixes.map(_+"_stanowiska.csv"): _*) {
     def parsePosition(x: Vector[String]): Position = {
       Position(extract(x, "id osoby"), md5(extract(x, "imie")), md5(extract(x, "nazwisko")), extract(x, "stanowisko"), extractOpt(x, "jednostka"))
     }
@@ -127,15 +127,16 @@ class Data(hashSalt: Option[String]) {
     }
   }
 
-  private object CommentsReader extends Reader("1000-2009z_zajecia_komentarze.csv", "1000-2009l_zajecia_komentarze.csv") {
+  private object CommentsReader extends Reader(filePrefixes.map(_+"_zajecia_komentarze.csv"): _*) {
     def read: Map[String, String] = {
       (for (x <- records) yield {
+        println(x)
         extract(x, "kod kartki") -> md5(extract(x, "treść komentarza"), 50)
       }).toMap
     }
   }
 
-  private object QuestionStatsReader extends Reader("1000-2009z_zajecia_grupuj_prowadzacy.csv", "1000-2009l_zajecia_grupuj_prowadzacy.csv") {
+  private object QuestionStatsReader extends Reader(filePrefixes.map(_+"_zajecia_grupuj_prowadzacy.csv"): _*) {
     def read: Map[(String, String, String), QuestionStats] = {
       (for (x <- records) yield {
         (extract(x, "id osoby"), extract(x, "id zajęć"), extract(x, "id pytania")) -> QuestionStats(extract(x, "uprawnieni").toInt, extract(x, "odp_na_pytanie").toInt)

@@ -51,14 +51,14 @@ object StatsGenerator {
     val attendance: List[Answer] = xs flatMap (_.attendance)
     val attendanceQuestion = {
       val set = attendance.map(_.qi.question).toSet
-      assert(set.size == 1, set)
-      set.head
+      assert(set.size <= 1, set)
+      set.headOption
     }
-    if (quality.isEmpty) {
+    if (quality.isEmpty || attendanceQuestion.isEmpty) {
       _ => None
     } else {
       val compositeStats = CompositeStats((quality map { case (key, answers) => getStats(key, answers) }).toList)
-      x => Some(CompleteStats(x, compositeStats, getStats(attendanceQuestion, attendance)))
+      x => Some(CompleteStats(x, compositeStats, getStats(attendanceQuestion.get, attendance)))
     }
   }
 
