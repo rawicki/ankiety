@@ -77,28 +77,28 @@ class CompleteReport(answers: List[Survey], categorization: Categorization)
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
               showCategorized(statsByPersonSubject, _.title(rankingPercent), show_per_person_stats(_, rankingPercent,
-                comments), categorization)
+                Some(comments)), categorization)
             }
           </div>
           <div class="center">
             <h2>{rankingPercent}% najgorszych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean)
-              show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
+              show_per_person_stats(statsByPersonSubject, rankingPercent, Some(comments))
             }
           </div>
           <div class="center">
             <h2>{rankingPercent}% najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.dev).reverse
-              show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
+              show_per_person_stats(statsByPersonSubject, rankingPercent, Some(comments))
             }
           </div>
           <div class="center">
             <h2>{rankingPercent}% najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
-              show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
+              show_per_person_stats(statsByPersonSubject, rankingPercent, Some(comments))
             }
           </div>
           <div class="center">

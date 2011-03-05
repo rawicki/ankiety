@@ -161,10 +161,9 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
       </tbody>
     </table>
 
-  def show_per_person_stats_rows(xs: List[ClassStats], comments: ClassInstance => List[(Class, String)]): NodeSeq = {
+  def show_per_person_stats_rows(xs: List[ClassStats], comments: Option[ClassInstance => List[(Class, String)]]): NodeSeq = {
     val understandingQuestion = Question("Czy zajęcia były prowadzone w sposób zrozumiały?")
     (for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
-      val cs = comments(classInstance)
       val cs_block_id = getUniqueId.toString
       <tr>
         <th>{ implicitly[Show[Person]].toHTML(person) }</th>
@@ -179,17 +178,33 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
           { quality.sample_size }
           <span style="font-size: 0.6em">({showPercent(samplePercent(quality))})</span>
         </td>
-        <td>{ show_comments_link(cs, cs_block_id) }</td>
-      </tr>
-      <tr class="comments" id={ "comments-" ++ cs_block_id }>
-        <td colspan="8">
-          { show_comments(cs) }
-        </td>
-      </tr>
+        {
+          comments match {
+            case Some(cs_) => {
+              val cs = cs_(classInstance)
+              <td>{ show_comments_link(cs, cs_block_id) }</td>
+            }
+            case None => NodeSeq.Empty
+          }
+        }
+      </tr> ++
+      {
+        comments match {
+          case Some(cs_) => {
+            val cs = cs_(classInstance)
+            <tr class="comments" id={ "comments-" ++ cs_block_id }>
+              <td colspan="8">
+                { show_comments(cs) }
+              </td>
+            </tr>
+          }
+          case None => NodeSeq.Empty
+        }
+      }
     }).flatten
   }
 
-  def show_per_person_stats(xs: List[ClassStats], limitPercent: Int, comments: ClassInstance => List[(Class, String)])
+  def show_per_person_stats(xs: List[ClassStats], limitPercent: Int, comments: Option[ClassInstance => List[(Class, String)]])
     (implicit ord: Ordering[ClassStats]): NodeSeq = {
     def keep(x: ClassStats) = x.quality.sample_size >= 5
     def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = if (xs == Nil) Nil else {
@@ -207,7 +222,12 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
           <th>Średnia zrozumiałość</th>
           <th>Obecność (%)</th>
           <th>Próbka</th>
-          <th>Komentarze</th>
+          {
+            comments match {
+                case Some(_) => <th>Komentarze</th>
+                case None => ""
+            }
+          }
         </tr>
       </thead>
       <tbody>{

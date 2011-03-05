@@ -77,7 +77,7 @@ class PublishingReport(answers: List[Survey], categorization: Categorization)
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
               showCategorized(statsByPersonSubject, _.title(rankingPercent), show_per_person_stats(_, rankingPercent,
-                comments), categorization)
+                None), categorization)
             }
           </div>
           <div class="center">
