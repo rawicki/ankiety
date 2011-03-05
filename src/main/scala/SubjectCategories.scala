@@ -13,8 +13,15 @@ trait Category {
 
 trait Categorization {
   val categories: List[Category]
-  def assign(x: Subject): Category
   val ordering: Ordering[Category] = Ordering.by(categories indexOf (_))
+
+  def assign(x: Subject): Category = {
+    categories filter (_ contains x) match {
+      case x :: Nil => x
+      case Nil => error("Subject %1s was not matched by any category".format(x))
+      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
+    }
+  }
 }
 
 object OneCatCategorization extends Categorization {
@@ -25,15 +32,6 @@ object OneCatCategorization extends Categorization {
   }
 
   val categories = przedmioty :: Nil
-
-  def assign(x: Subject): Category = {
-    categories filter (_ contains x) match {
-      case x :: Nil => x
-      case Nil => error("Subject %1s was not matched by any category".format(x))
-      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
-    }
-  }
-
 }
 
 object MathCategorization extends Categorization {
@@ -56,14 +54,6 @@ object MathCategorization extends Categorization {
   }
 
   val categories = kursowe :: fakultatywne :: monograficzne :: Nil
-
-  def assign(x: Subject): Category = {
-    categories filter (_ contains x) match {
-      case x :: Nil => x
-      case Nil => error("Subject %1s was not matched by any category".format(x))
-      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
-    }
-  }
 }
 
 object CSCategorization extends Categorization {
@@ -119,13 +109,4 @@ object CSCategorization extends Categorization {
   }
 
   val categories = kursowe :: staleObieralne :: obieralne :: bioinf :: Nil
-
-  def assign(x: Subject): Category = {
-    categories filter (_ contains x) match {
-      case x :: Nil => x
-      case Nil => error("Subject %1s was not matched by any category".format(x))
-      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
-    }
-  }
-
 }
