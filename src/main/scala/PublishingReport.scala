@@ -6,7 +6,7 @@ import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
 
-object PublishingReportBuilder extends ReportBuilder {
+object PublishingReport extends Report {
   
   def show_per_category_stats[T: Show](xs: List[CompleteStats[String, T]], category: String): NodeSeq =
     <table>

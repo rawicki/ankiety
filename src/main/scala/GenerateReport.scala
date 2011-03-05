@@ -2,8 +2,8 @@ import java.io.{OutputStreamWriter, FileOutputStream}
 import scala.xml._
 
 import surveys.SurveyClasses.{Survey, Subject}
-import surveys.DataImporter.DataImporter
-import surveys.ReportBuilder.{PublishingReportBuilder, CompleteReport}
+import surveys.DataImporter.Data
+import surveys.ReportBuilder.{PublishingReport, CompleteReport}
 import surveys.SubjectCategories.{Category, Categorization, CSCategorization}
 
 object GenerateReport {
@@ -17,7 +17,7 @@ object GenerateReport {
 
   def main(args: Array[String]){
     val salt = if (args contains "md5") Some((1 to 10).map(_ => scala.util.Random.nextPrintableChar).mkString("")) else None
-    val answers = (new DataImporter(salt)).readSurveys
+    val answers = (new Data(salt)).readSurveys
 
 
     // generateReport(answers, "Report")

@@ -6,7 +6,7 @@ import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
 
-object CompleteReport extends ReportBuilder {
+object CompleteReport extends Report {
 
   def buildReport(answers: List[Survey], categorization: Categorization): NodeSeq = {
     val rankingPercent = 25

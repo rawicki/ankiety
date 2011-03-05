@@ -3,7 +3,7 @@ package surveys.DataImporter
 import scala.io.Source
 import surveys.SurveyClasses._
 
-class DataImporter(hashSalt: Option[String]) {
+class Data(hashSalt: Option[String]) {
   def openDataFileRaw(filename: String): (Vector[String], List[Vector[String]]) = {
     val reader = new com.csvreader.CsvReader(filename, ';', java.nio.charset.Charset.forName("UTF-8"))
     reader.readHeaders

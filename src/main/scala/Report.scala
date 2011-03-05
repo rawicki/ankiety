@@ -6,7 +6,7 @@ import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
 
-abstract class ReportBuilder {
+abstract class Report {
   type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
 
   var next_tag_id: Int = 1
