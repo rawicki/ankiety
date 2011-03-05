@@ -3,12 +3,12 @@ import scala.xml._
 
 import surveys.SurveyClasses.{Survey, Subject}
 import surveys.DataImporter.DataImporter
-import surveys.ReportBuilder.ReportBuilder
+import surveys.ReportBuilder.{PublishingReportBuilder, CompleteReport}
 import surveys.SubjectCategories.{Category, Categorization, CSCategorization}
 
 object GenerateReport {
   def generateReport(answers: List[Survey], title: String, c: Categorization) {
-    val report = ReportBuilder.buildReport(answers, c)
+    val report = CompleteReport.buildReport(answers, c)
 
     val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
     fw.write(report.toString)

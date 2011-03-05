@@ -119,8 +119,8 @@ object StatsGenerator {
     PartialMatrix(questions, values.toMap)
   }
 
-  def getCommentsForPersonSubject(xs: List[Survey], classInstance: ClassInstance): List[(String, String)] = {
-    val xss = xs.filter(x => x.person == classInstance.person && x.clazz.subject == classInstance.subject)
-    xss.collect{ case Survey(_, clazz, _, _, _, Some(s)) => (clazz.code, s) }
+  def getCommentsForPersonSubject(xs: List[Survey], person: Person, subject: Subject): List[(Class, String)] = {
+    val xss = xs.filter(x => x.person == person && x.clazz.subject == subject)
+    xss.collect{ case Survey(_, clazz, _, _, _, Some(s)) => (clazz, s) }
   }
 }
