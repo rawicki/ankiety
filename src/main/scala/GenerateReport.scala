@@ -7,8 +7,8 @@ import surveys.ReportBuilder.{PublishingReport, CompleteReport}
 import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  OneCatCategorization, MathCategorization}
 
 object GenerateReport {
-  def generateReport(answers: List[Survey], title: String, c: Categorization) {
-    val report = new CompleteReport(answers, c)
+  def generateReport(answers: List[Survey], title: String, c: Categorization, prefixes: List[String]) {
+    val report = new PublishingReport(answers, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
 
     val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
     fw.write(report.buildReport.toString)
@@ -21,9 +21,11 @@ object GenerateReport {
     prefixes foreach { x =>
       println("Running generate report with prefix " + x)
       val answers = (new Data(salt, x :: Nil)).readSurveys
-      generateReport(answers, x + "_Report", OneCatCategorization)
-      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")), x + "_Mathematics", MathCategorization)
-      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-2")), x + "_ComputerScience", CSCategorization)
+      generateReport(answers, x + "_Report", OneCatCategorization, List(x))
+      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")),
+        x + "_Mathematics", MathCategorization, List(x))
+      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-2")),
+        x + "_ComputerScience", CSCategorization, List(x))
     }
   }
 

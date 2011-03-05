@@ -14,7 +14,7 @@ case class Stats[T](of: T, mean: Double, dev: Double, med: Double, sample_size: 
 
 case class CompositeStats[T: Show](xs: List[Stats[T]]) {
   assert(xs != Nil)
-  val flat = StatsGenerator.stats(xs map (_.of) map (implicitly[Show[T]].toString) mkString ", ", xs flatMap (_.xs)).get
+  val flat = StatsGenerator.stats("Statystyki łączne", xs flatMap (_.xs)).get
   val mean = flat.mean
   val dev = flat.dev
   val sample_size = xs.map(_.sample_size).max

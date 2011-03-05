@@ -6,7 +6,7 @@ import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
 
-class CompleteReport(answers: List[Survey], categorization: Categorization)
+class CompleteReport(answers: List[Survey], categorization: Categorization, periods: List[String])
         extends Report(answers, categorization) {
 
   def buildReport: NodeSeq = {
@@ -20,7 +20,7 @@ class CompleteReport(answers: List[Survey], categorization: Categorization)
           <a href="http://github.com/rawicki/ankiety">
             <img style="position: absolute; top: 0; left: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub" />
           </a>
-          <h1>Wyniki ankiet 2009Z/2009L (Complete Report)</h1>
+          <h1>Wyniki ankiet {periods.sorted mkString "/"}</h1>
           <h3>(wypełnionych ankiet: {answers.size})</h3>
           <div class="center">
             <h2>Średni wynik wg pytania</h2>
