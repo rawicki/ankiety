@@ -79,7 +79,7 @@ object CompleteReport extends Report {
 
     def show_per_person_stats(xs: List[ClassStats], limitPercent: Int)(implicit ord: Ordering[ClassStats]): NodeSeq = {
       def keep(x: ClassStats) = x.quality.sample_size >= 5
-      def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = {
+      def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = if (xs == Nil) Nil else {
         val n = scala.math.ceil((p * xs.size: Double) / 100).toInt
         val (ys1, ys2) = xs.sorted splitAt n
         val last = ys1.last
