@@ -71,6 +71,7 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
           <div class="center">
             <h2>Procent wypełnionych ankiet z komentarzami a procent wypełnionych ankiet</h2>
             { scatterPlot(commentsFilled zip relativeFilled, 1) }
+          </div>
           <div class="note">
             <p>Rankingi są sporządzane według zasady, że odrzucamy oceny dla których próbka jest mniejsza od 5. Następnie
             oceny są sortowane po ogólnej ocenie i odcinane jest 25% najlepszych wyników. Jeśli na granicy odcięcia
