@@ -77,6 +77,9 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
             oceny są sortowane po ogólnej ocenie i odcinane jest 25% najlepszych wyników. Jeśli na granicy odcięcia
             oceny są takie same próg odcięcia jest przesuwany do pierwszej oceny niżej w rankingu.</p>
             <p>Niebieskie wykresy oznaczają rozkład udzielonych odpowiedzi na dane pytanie.</p>
+            <br />
+            <p>Raport przygotował program, który napisali: Grzegorz Kossakowski, Rafał Rawicki, Aleksander Jankowski.</p>
+            <p>Kod źródłowy jest dostępny w serwisie <a href="http://github.com/rawicki/ankiety">github.com</a></p>
           </div>
         </body>
       </html>
