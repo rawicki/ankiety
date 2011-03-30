@@ -128,7 +128,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
     </table>
   }
 
-  def scatterPlot(data: List[(Double, Double)], id: Integer): NodeSeq = {
+  def scatterPlot(data: List[(Double, Double)], id: Int): NodeSeq = {
     val plotId = "placeholder-%d" format id
     <div id={plotId} style="width:600px;height:300px;margin: auto;"></div>
     <script id="source" language="javascript" type="text/javascript">
