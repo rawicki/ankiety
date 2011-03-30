@@ -9,6 +9,8 @@ import surveys.SubjectCategories.{Category, Categorization}
 class PublishingReport(answers: List[Survey], categorization: Categorization, periods: List[String])
         extends Report(answers, categorization) {
 
+  val displayComments = false
+
   def buildReport: NodeSeq = {
     val rankingPercent = 25
 
@@ -28,14 +30,18 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
               <thead>
                 <tr>
                   <th>Pytanie</th>
-                  <th>Średnia</th>
+                  <th>Średnia&darr;</th>
                 </tr>
               </thead>
               <tbody>
                 {
-                  for(stats <- statsByQuestion.xs.sortBy(_.mean)) yield
+                  implicit val statsOrd = Ordering.by((x: Stats[Question]) => x.mean).reverse
+                  for(stats <- statsByQuestion.xs.sorted) yield
                     <tr>
-                    <th>{ implicitly[Show[Question]].toHTML(stats.of) }</th>
+                    <th>
+                      { implicitly[Show[Question]].toHTML(stats.of) }
+                      <span style="font-size: 0.6em">({questionIndices(stats.of)})</span>
+                    </th>
                     <td>{ show_mean(stats) }</td>
                     </tr>
                 }
@@ -59,9 +65,8 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
           <div class="center">
             <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
             {
-              implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
-              showCategorized(statsByPersonSubject, _.title(rankingPercent), show_per_person_stats(_, rankingPercent,
-                None), categorization)
+              showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent,
+                comments), categorization)
             }
           </div>
           <div class="center">

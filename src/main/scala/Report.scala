@@ -6,7 +6,11 @@ import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
 
-abstract class Report(answers: List[Survey], categorization: Categorization) {
+trait Configuration {
+  val displayComments: Boolean
+}
+
+abstract class Report(answers: List[Survey], categorization: Categorization) extends AnyRef with Configuration {
   type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
 
   val reportHeader: NodeSeq =
@@ -27,6 +31,8 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
     </head>
 
   val statsByQuestion = StatsGenerator.statsByQuestion(answers)
+  val questionIndices = statsByQuestion.xs.map(_.of).zipWithIndex.toMap
+  val questionOrdering = Ordering.by(questionIndices)
   val statsByClassType = StatsGenerator.statsByClassType(answers).sortBy(-_.quality.mean)
   val statsByTitle = StatsGenerator.statsByTitle(answers).sortBy(-_.quality.mean)
   val statsByPosition = StatsGenerator.statsByPosition(answers).sortBy(-_.quality.mean)
@@ -172,7 +178,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
       </tbody>
     </table>
 
-  def show_per_person_stats_rows(xs: List[ClassStats], comments: Option[ClassInstance => List[(Class, String)]]): NodeSeq = {
+  def show_per_person_stats_rows(xs: List[ClassStats], comments: ClassInstance => List[(Class, String)]): NodeSeq = {
     val understandingQuestion = Question("Czy zajęcia były prowadzone w sposób zrozumiały?")
     (for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
       val cs_block_id = getUniqueId.toString
@@ -190,32 +196,38 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
           <span style="font-size: 0.6em">({showPercent(samplePercent(quality))})</span>
         </td>
         {
-          comments match {
-            case Some(cs_) => {
-              val cs = cs_(classInstance)
-              <td>{ show_comments_link(cs, cs_block_id) }</td>
-            }
-            case None => NodeSeq.Empty
-          }
+          if (displayComments) {
+            val cs = comments(classInstance)
+            <td>{ show_comments_link(cs, cs_block_id) }</td>
+          } else NodeSeq.Empty
         }
       </tr> ++
       {
-        comments match {
-          case Some(cs_) => {
-            val cs = cs_(classInstance)
-            <tr class="comments" id={ "comments-" ++ cs_block_id }>
-              <td colspan="8">
-                { show_comments(cs) }
-              </td>
-            </tr>
-          }
-          case None => NodeSeq.Empty
-        }
+        if (displayComments) {
+          val cs = comments(classInstance)
+          <tr class="comments" id={ "comments-" ++ cs_block_id }>
+            <td colspan="8">
+              { show_comments(cs) }
+            </td>
+          </tr>
+        } else NodeSeq.Empty
       }
     }).flatten
   }
 
-  def show_per_person_stats(xs: List[ClassStats], limitPercent: Int, comments: Option[ClassInstance => List[(Class, String)]])
+  def showPerPersonByQuality(xs: List[ClassStats], limitPercent: Int,
+                             comments: ClassInstance => List[(Class, String)]) = {
+    implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
+    val columnHeaders: String => NodeSeq = (x: String) => x match {
+      case "Oceny" => Unparsed("Oceny&darr;")
+      case x => new Text(x)
+    }
+    show_per_person_stats(xs, limitPercent, comments, columnHeaders)
+  }
+
+  def show_per_person_stats(xs: List[ClassStats], limitPercent: Int,
+                            comments: ClassInstance => List[(Class, String)],
+                            columnHeaders: String => NodeSeq = (new Text(_)))
     (implicit ord: Ordering[ClassStats]): NodeSeq = {
     def keep(x: ClassStats) = x.quality.sample_size >= 5
     def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = if (xs == Nil) Nil else {
@@ -227,17 +239,10 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
     <table>
       <thead>
         <tr>
-          <th>Osoba</th>
-          <th>Przedmiot</th>
-          <th>Oceny</th>
-          <th>Średnia zrozumiałość</th>
-          <th>Obecność (%)</th>
-          <th>Próbka</th>
           {
-            comments match {
-                case Some(_) => <th>Komentarze</th>
-                case None => ""
-            }
+            val columns = List("Osoba", "Przedmiot", "Oceny", "Średnia zrozumiałość", "Obecność (%)", "Próbka") ++
+              (if (displayComments) List("Komentarze") else Nil)
+            for (x <- columns) yield <th>{columnHeaders(x)}</th>
           }
         </tr>
       </thead>
