@@ -21,7 +21,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) {
           $(function() {{
               /* Use 'html' instead of an array of values to pass options
               to a sparkline with data in the tag */
-              $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: 'blue'}});
+              $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: '#0092bf'}});
           }});
       </script>
     </head>
