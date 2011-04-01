@@ -73,9 +73,9 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
             { scatterPlot(commentsFilled zip relativeFilled, 1) }
           </div>
           <div class="note">
-            <p>Rankingi są sporządzane według zasady, że odrzucamy oceny dla których próbka jest mniejsza od 5. Następnie
+            <p>Rankingi są sporządzane według zasady, że odrzucamy oceny, dla których próbka jest mniejsza od 5. Następnie
             oceny są sortowane po ogólnej ocenie i odcinane jest 25% najlepszych wyników. Jeśli na granicy odcięcia
-            oceny są takie same próg odcięcia jest przesuwany do pierwszej oceny niżej w rankingu.</p>
+            oceny są takie same, próg odcięcia jest przesuwany do pierwszej oceny niżej w rankingu.</p>
             <p>Niebieskie wykresy oznaczają rozkład udzielonych odpowiedzi na dane pytanie.</p>
             <br />
             <p>Raport przygotował program, który napisali: Grzegorz Kossakowski, Rafał Rawicki, Aleksander Jankowski.</p>
