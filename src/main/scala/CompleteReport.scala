@@ -24,7 +24,25 @@ class CompleteReport(answers: List[Survey], categorization: Categorization, peri
           </a>
           <h1>Wyniki ankiet {periods.sorted mkString "/"}</h1>
           <h3>(wypełnionych ankiet: {answers.size})</h3>
-          <div class="center">
+          <nav>
+            <img src="templates/star-top.png" alt="*" width="12" height="25" />
+            <h2 id="navhdr">MENU</h2>
+            <ul id="navmenu">
+              <li><a href="#top">Góra</a></li>
+              <li><a href="#questions">Pytania</a></li>
+              <li><a href="#correlations">Korelacje</a></li>
+              <li><a href="#categorized">Wg. kategorii</a></li>
+              <li><a href="#thebest">Najlepsi</a></li>
+              <li><a href="#theworst">Najsłabsi</a></li>
+              <li><a href="#controversial">Kontrowersyjni</a></li>
+              <li><a href="#mostskipped">Najczęściej opuszczane</a></li>
+              <li><a href="#scatterplots">Wypełnienia, a&nbsp;oceny</a></li>
+              <li><a href="#legend">Legenda</a></li>
+            </ul>
+            <img class="star" src="templates/star-bottom.png" alt="*" width="12" height="29" />
+          </nav>
+
+          <div class="center" id="questions">
             <h2>Średni wynik wg pytania</h2>
             <table>
               <thead>
@@ -44,7 +62,7 @@ class CompleteReport(answers: List[Survey], categorization: Categorization, peri
               </tbody>
             </table>
           </div>
-          <div class="center">
+          <div class="center" id="correlations">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
             {
               showPartialMatrix(statsByQuestionMatrix, new Text("-"), true) {
@@ -58,7 +76,7 @@ class CompleteReport(answers: List[Survey], categorization: Categorization, peri
               }
             }
           </div>
-          <div class="center">
+          <div class="center" id="categorized">
             <h2>Średni wynik dla wszystkich pytań wg stopnia lub tytułu naukowego</h2>
             { show_per_category_stats(statsByTitle, "Stopień/Tytuł") }
           </div>
@@ -74,35 +92,35 @@ class CompleteReport(answers: List[Survey], categorization: Categorization, peri
             <h2>Średni wynik dla wszystkich pytań wg typu zajęć</h2>
             { show_per_category_stats(statsByClassType, "Typ zajęć") }
           </div>
-          <div class="center">
+          <div class="center" id="thebest">
             <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
             {
               showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent,
                 comments), categorization)
             }
           </div>
-          <div class="center">
+          <div class="center" id="theworst">
             <h2>{rankingPercent}% najgorszych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean)
               show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
             }
           </div>
-          <div class="center">
+          <div class="center" id="controversial">
             <h2>{rankingPercent}% najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.dev).reverse
               show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
             }
           </div>
-          <div class="center">
+          <div class="center" id="mostskipped">
             <h2>{rankingPercent}% najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
               show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
             }
           </div>
-          <div class="center">
+          <div class="center" id="scatterplots">
             <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
             { scatterPlot(quality zip relativeFilled, 0) }
           </div>
@@ -110,10 +128,10 @@ class CompleteReport(answers: List[Survey], categorization: Categorization, peri
             <h2>Procent wypełnionych ankiet z komentarzami a procent wypełnionych ankiet</h2>
             { scatterPlot(commentsFilled zip relativeFilled, 1) }
           </div>
-          <div class="note">
-            <p>Rankingi są sporządzane według zasady, że odrzucamy oceny dla których próbka jest mniejsza od 5. Następnie
+          <div class="note" id="legend">
+            <p>Rankingi są sporządzane według zasady, że odrzucamy oceny, dla których próbka jest mniejsza od 5. Następnie
             oceny są sortowane po ogólnej ocenie i odcinane jest 25% najlepszych wyników. Jeśli na granicy odcięcia
-            oceny są takie same próg odcięcia jest przesuwany do pierwszej oceny niżej w rankingu.</p>
+            oceny są takie same, próg odcięcia jest przesuwany do pierwszej oceny niżej w rankingu.</p>
             <p>Niebieskie wykresy oznaczają rozkład udzielonych odpowiedzi na dane pytanie.</p>
             <br />
             <p>Raport przygotował program, który napisali: Grzegorz Kossakowski, Rafał Rawicki, Aleksander Jankowski.</p>
