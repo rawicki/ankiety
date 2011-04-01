@@ -20,6 +20,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
       <script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
       <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
       <script type="text/javascript" src="templates/flot/jquery.flot.js"></script>
+      <script type="text/javascript" src="templates/flot/jquery.flot.stack.js"></script>
 
       <script type="text/javascript">
           $(function() {{
@@ -141,6 +142,68 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
                 data: d,
                 points: {{show: true}}
             }}]);
+      }});
+    </script>
+  }
+
+  def barsPlot(data: List[(String, Int)], id: Int): NodeSeq = {
+    val plotId = "placeholder-%d" format id
+    <div id={plotId} style="width:600px;height:300px;margin: auto;"></div>
+    <script id="source" language="javascript" type="text/javascript">
+      $(function () {{
+        var d = {
+          Unparsed((data.zipWithIndex map { case ((_, y), i) => "[%1d, %2d]".format(i, y) }).mkString("[", ",", "]"))
+        };
+        var t = {
+          Unparsed((data.zipWithIndex map { case ((x, _), i) => "[%1d, \"%2s\"]".format(i, x) }).mkString("[", ",", "]"))
+        }
+        <xml:unparsed>
+        var series = [{
+          data: d,
+          bars: {show: true, barWidth: 0.5, align: "center"}
+        }]
+        var options = {
+          xaxis: {
+            ticks: t
+          }
+        }
+        </xml:unparsed>
+        var id = {Unparsed("\"#" + plotId + "\"")}
+        $.plot($(id), series, options);
+      }});
+    </script>
+  }
+
+  //FIXME: Move all plotting to separate module (object)
+  def stackedBarsPlot(ticks: List[(Int, String)], data1: List[(Int, Int)], data2: List[(Int, Int)], id: Int): NodeSeq = {
+    val plotId = "placeholder-%d" format id
+    def formatData(xs: List[(Int, Int)]): NodeSeq =
+      Unparsed((xs map { case (x, y) => "[%1d, %2d]".format(x, y) }).mkString("[", ",", "]"))
+    <div id={plotId} style="width:600px;height:300px;margin: auto;"></div>
+    <script id="source" language="javascript" type="text/javascript">
+      $(function () {{
+        var d1 = { formatData(data1) };
+        var d2 = { formatData(data2) };
+        var t = {
+          Unparsed((ticks map { case (x, l) => "[%1d, \"%2s\"]".format(x, l) }).mkString("[", ",", "]"))
+        }
+        <xml:unparsed>
+        var series = [{ data: d1, label: "Ankiety z komentarzami"} , { data: d2, label: "Wszystie ankiety"}]
+        var options = {
+          xaxis: {
+            ticks: t
+          },
+          series: {
+            stack: true,
+            bars: {show: true, barWidth: 0.5, align: "center"}
+          },
+          legend: {
+            position: "nw"
+          }
+        }
+        </xml:unparsed>
+        var id = {Unparsed("\"#" + plotId + "\"")}
+        $.plot($(id), series, options);
       }});
     </script>
   }
