@@ -105,6 +105,13 @@ object StatsGenerator {
       val answers = for (x <- xs; a <- x.values if a.qi.question.value == q) yield a
       getStats(q, answers)
     }
+    def printInfo(q1: String, q2: String, surveys: List[Survey]): Unit = if (surveys.size < 100) {
+      val N = 10
+      print(q1); print(", "); println(q2)
+      println("Stats based on %1d surveys, took %2d examples of subjects:".format(surveys.size, N))
+      val subjects: Set[String] = surveys.map(_.clazz.subject.description).toSet take N
+      println(subjects); println();
+    }
     val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
       as <- xs
       a <- as.values
@@ -115,7 +122,10 @@ object StatsGenerator {
       q2 <- questions
       val surveys = (answersByQuestion(q1) intersect answersByQuestion(q2)).toList
       if surveys != Nil
-    } yield (q1, q2) -> (statsByQuestion(q1, surveys), statsByQuestion(q2, surveys))
+    } yield {
+      printInfo(q1, q2, surveys)
+      (q1, q2) -> (statsByQuestion(q1, surveys), statsByQuestion(q2, surveys))
+    }
     PartialMatrix(questions, values.toMap)
   }
 
