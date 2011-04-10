@@ -8,16 +8,26 @@ import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  O
 
 object GenerateReport {
   def generateReport(answers: List[Survey], title: String, c: Categorization, prefixes: List[String]) {
-    val report = new PublishingReport(answers, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
-
-    val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
-    fw.write(report.buildReport.toString)
-    fw.close()
+    {
+      val report = new PublishingReport(answers, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
+      val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
+      fw.write(report.buildReport.toString)
+      fw.close()
+    }
+    {
+      val report = new CompleteReport(answers, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
+      val fw = new OutputStreamWriter(new FileOutputStream(title + "-complete.html"), "UTF-8")
+      fw.write(report.buildReport.toString)
+      fw.close()
+    }
   }
 
   def main(args: Array[String]) {
     val salt = if (args contains "md5") Some((1 to 10).map(_ => scala.util.Random.nextPrintableChar).mkString("")) else None
-    val prefixes = findDataPrefixes
+    val prefixes = {
+      val xs = args.filterNot(_=="md5").toList
+      if (xs != Nil) xs else findDataPrefixes
+    }
     prefixes foreach { x =>
       println("Running generate report with prefix " + x)
       val answers = (new Data(salt, x :: Nil)).readSurveys
