@@ -39,6 +39,15 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
   val statsByPosition = StatsGenerator.statsByPosition(answers).sortBy(-_.quality.mean)
   val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).sortBy(-_.quality.mean)
   val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).sortBy(-_.quality.mean)
+  val intervalSize = 0.5
+  val qualityHistogram: List[((Double, Double), Int)] = {
+    val xs = StatsGenerator.statsByPersonSubject(answers).map(_.quality.mean)
+    val minQuality = 1
+    val maxQuality = 7
+    val ticks = Stream.from(0).map(minQuality + _*intervalSize).takeWhile(_<=maxQuality).toList
+    val intervals = ticks.sliding(2).toList
+    for (p1 :: p2 :: Nil <- intervals) yield (p1 -> p2) -> xs.count(x => p1 <= x && x < p2)
+  }
   val (quality, relativeFilled) = (for {
          CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
     val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
