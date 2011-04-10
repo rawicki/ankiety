@@ -120,7 +120,8 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
                     (scala.math.min(400 - correlation * 400, 220)).toInt.toHexString * 3
                   }
                   val cor = stats1 correlationWith stats2
-                  <span style={ "color: #" + getColour(cor) }>{show_double(cor)}</span>
+                  val n = stats1.sample_size
+                  <span style={ "color: #" + getColour(cor) } title={"Próbka: " + n}>{show_double(cor)}</span>
                 }
               }
             }
