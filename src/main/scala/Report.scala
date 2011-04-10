@@ -68,7 +68,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
       } yield (qs.allowed)).max
   } yield (commentsCount: Double) / allowedCount * 100
 
-  val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers)
+  val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers, questionOrdering)
 
   val comments: ClassInstance => List[(Class, String)] =
               (x: ClassInstance) => StatsGenerator.getCommentsForPersonSubject(answers, x.person, x.subject)

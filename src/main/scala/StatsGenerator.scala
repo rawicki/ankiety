@@ -98,25 +98,25 @@ object StatsGenerator {
     }).toList)
   }
 
-  def statsByQuestionMatrix(xs: List[Survey]): PartialMatrix[(Stats[_], Stats[_])] = {
+  def statsByQuestionMatrix(xs: List[Survey], qo: Ordering[Question]): PartialMatrix[(Stats[_], Stats[_])] = {
     def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
     //FIXME: Change to Question from String
-    def statsByQuestion(q: String, xs: List[Survey]): Stats[String] = {
-      val answers = for (x <- xs; a <- x.values if a.qi.question.value == q) yield a
-      getStats(q, answers)
+    def statsByQuestion(q: Question, xs: List[Survey]): Stats[String] = {
+      val answers = for (x <- xs; a <- x.values if a.qi.question == q) yield a
+      getStats(q.value, answers)
     }
-    def printInfo(q1: String, q2: String, surveys: List[Survey]): Unit = if (surveys.size < 100) {
+    def printInfo(q1: Question, q2: Question, surveys: List[Survey]): Unit = if (surveys.size < 100) {
       val N = 10
-      print(q1); print(", "); println(q2)
+      print(q1.value); print(", "); println(q2.value)
       println("Stats based on %1d surveys, took %2d examples of subjects:".format(surveys.size, N))
       val subjects: Set[String] = surveys.map(_.clazz.subject.description).toSet take N
       println(subjects); println();
     }
-    val answersByQuestion: Map[String, Set[Survey]] = toMultiMap(for {
+    val answersByQuestion: Map[Question, Set[Survey]] = toMultiMap(for {
       as <- xs
       a <- as.values
-    } yield (a.qi.question.value, as))
-    val questions = answersByQuestion.keys.toList
+    } yield (a.qi.question, as))
+    val questions = answersByQuestion.keys.toList.sorted(qo)
     val values = for {
       q1 <- questions
       q2 <- questions
@@ -124,9 +124,9 @@ object StatsGenerator {
       if surveys != Nil
     } yield {
       printInfo(q1, q2, surveys)
-      (q1, q2) -> (statsByQuestion(q1, surveys), statsByQuestion(q2, surveys))
+      (q1.value, q2.value) -> (statsByQuestion(q1, surveys), statsByQuestion(q2, surveys))
     }
-    PartialMatrix(questions, values.toMap)
+    PartialMatrix(questions.map(_.value), values.toMap)
   }
 
   def getCommentsForPersonSubject(xs: List[Survey], person: Person, subject: Subject): List[(Class, String)] = {
