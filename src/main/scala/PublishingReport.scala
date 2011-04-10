@@ -65,13 +65,13 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
             <h2>Rozkład całkowitej liczby odpowiedzi według pytania</h2>
             {
               val data = statsByQuestion.xs map { x =>
-                "<b>(%1d)</b>".format(questionIndices(x.of)) -> x.sample_size
+                "(%1d)".format(questionIndices(x.of)) -> x.sample_size
               }
               barsPlot(data, getUniqueId())
             }
           </div>
           <div>
-            <h2>Rozkład liczby odpowiedzi na pytania</h2>
+            <h2>Rozkład liczby odpowiedzi dla ≤k pytań</h2>
             {
               def indicator[T](x: Option[T]): Int = if (x.isDefined) 1 else 0
               def countAnswers(x: Survey) =
@@ -103,7 +103,7 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
             }
           </div>
           <div>
-            <h2>Rozkład ocen</h2>
+            <h2>Rozkład ocen prowadzących</h2>
             {
               val data = qualityHistogram map {
                 case ((p1, p2), x) => "[%1.2f %2.2f)".format(p1, p2) -> x
