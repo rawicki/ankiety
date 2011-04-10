@@ -109,7 +109,8 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
         <tr>
           <td>&nbsp;</td>
           {
-            for ((_, index) <- m.labels.zipWithIndex) yield <th style="font-size: 0.6em">{"(" + index + ")"}</th>
+            for ((_, index) <- m.labels.zipWithIndex) yield
+              <th style="font-size: 0.6em; text-align: center; padding: 0;">{"(" + index + ")"}</th>
           }
         </tr>
         {
