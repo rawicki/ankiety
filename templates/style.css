@@ -116,6 +116,10 @@ a {
     border-bottom: 1px gray dotted;
 }
 
+nav a {
+  border: 0;
+}
+
 tr.class-type-header th {
     background: #EEEEEE;
     text-align: center;
