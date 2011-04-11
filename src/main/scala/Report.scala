@@ -36,7 +36,7 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
     </head>
 
   val statsByQuestion = StatsGenerator.statsByQuestion(surveySet.values)
-  val questionIndices = statsByQuestion.xs.map(_.of).sortBy(_.value).zipWithIndex.toMap
+  val questionIndices = statsByQuestion.xs.map(_.of).zipWithIndex.toMap
   val questionOrdering = Ordering.by(questionIndices)
   val statsByClassType = StatsGenerator.statsByClassType(surveySet.values).sortBy(-_.quality.mean)
   val statsByTitle = StatsGenerator.statsByTitle(surveySet.values).sortBy(-_.quality.mean)

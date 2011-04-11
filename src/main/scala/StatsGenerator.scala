@@ -92,7 +92,11 @@ object StatsGenerator {
 
   def statsByQuestion(xs: List[Survey]): CompositeStats[Question] = {
     val answers: List[(String, Answer)] = xs flatMap (x => (x.values map (y => (x.id, y))))
-    val byQuestion: Map[Question, List[(String, Answer)]] = answers groupBy (_._2.qi.question)
+    import scala.collection.immutable.SortedMap
+    def toSortedMap[A: Ordering, B](xs: Map[A,B]): SortedMap[A,B] = SortedMap.empty[A,B] ++ xs
+    implicit val qo = Ordering.by[Question, String](_.value)
+    val byQuestion: SortedMap[Question, List[(String, Answer)]] =
+      toSortedMap(answers groupBy (_._2.qi.question))
     CompositeStats((byQuestion map {
       case (key, xs) => getStats(key, xs.sortBy{_._1}.map{_._2})
     }).toList)
