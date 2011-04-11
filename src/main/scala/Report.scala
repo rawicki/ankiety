@@ -14,7 +14,9 @@ trait Configuration {
 abstract class Report(surveySet: SurveySet, categorization: Categorization) extends AnyRef with Configuration {
   type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
 
-  val reportHeader: NodeSeq =
+  val title: String
+
+  lazy val reportHeader: NodeSeq =
     <head>
       <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
       <link rel="stylesheet" type="text/css" href="templates/style.css"/>
@@ -30,6 +32,7 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
               $('.inlinesparkbar').sparkline('html', {{type: 'bar', barColor: '#0092bf'}});
           }});
       </script>
+      <title>{title}</title>
     </head>
 
   val statsByQuestion = StatsGenerator.statsByQuestion(surveySet.values)

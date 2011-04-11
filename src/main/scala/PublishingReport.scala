@@ -12,6 +12,8 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
 
   val displayComments = false
 
+  val title = "Wyniki ankiet %1s - %2s".format(periods.sorted mkString "/", surveySet.name)
+
   def buildReport: NodeSeq = {
     val rankingPercent = 25
 
@@ -23,7 +25,7 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
           <a href="http://github.com/rawicki/ankiety">
             <img style="position: absolute; top: 0; left: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub" />
           </a>
-          <h1>Wyniki ankiet {periods.sorted mkString "/"}</h1>
+          <h1>{title}</h1>
           <h3>(wypełnionych ankiet: {surveySet.values.size})</h3>
           <nav>
             <img src="templates/star-top.png" alt="*" width="12" height="25" />
