@@ -105,15 +105,6 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
               stackedBarsPlot(ticks, cumulativeCommentCounts, cumulativeAnswersCounted, getUniqueId())
             }
           </div>
-          <div>
-            <h2>Rozkład ocen prowadzących</h2>
-            {
-              val data = qualityHistogram map {
-                case ((p1, p2), x) => "[%1.2f %2.2f)".format(p1, p2) -> x
-              }
-              barsPlot(data, getUniqueId())
-            }
-          </div>
           <div class="center" id="correlations">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
             {
@@ -127,6 +118,15 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
                   <span style={ "color: #" + getColour(cor) } title={"Próbka: " + n}>{show_double(cor)}</span>
                 }
               }
+            }
+          </div>
+          <div>
+            <h2>Rozkład ocen prowadzących</h2>
+            {
+              val data = qualityHistogram map {
+                case ((p1, p2), x) => "[%1.2f %2.2f)".format(p1, p2) -> x
+              }
+              barsPlot(data, getUniqueId())
             }
           </div>
           <div class="center" id="thebest">
