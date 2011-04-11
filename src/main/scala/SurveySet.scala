@@ -12,7 +12,7 @@ trait SurveySet {
 
 class Math(surveys: List[Survey]) extends SurveySet {
 
-  val name = "Matematyka"
+  val name = "matematyka"
   val values = surveys.filter(contains)
 
   private def contains(x: Survey): Boolean = x.clazz.subject.code.startsWith("1000-1")
@@ -21,7 +21,7 @@ class Math(surveys: List[Survey]) extends SurveySet {
 
 class CS(surveys: List[Survey]) extends SurveySet {
 
-  val name = "Informatyka"
+  val name = "informatyka"
   val values = surveys.filter(contains)
 
   private def contains(x: Survey): Boolean = x.clazz.subject.code.startsWith("1000-2")
@@ -30,7 +30,7 @@ class CS(surveys: List[Survey]) extends SurveySet {
 
 class All(surveys: List[Survey]) extends SurveySet {
 
-  val name = "Wszystkie ankiety"
+  val name = "matematyka i informatyka"
   val values = surveys
 
 }
