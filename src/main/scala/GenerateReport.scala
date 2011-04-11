@@ -5,17 +5,18 @@ import surveys.SurveyClasses.{Survey, Subject}
 import surveys.DataImporter.Data
 import surveys.ReportBuilder.{PublishingReport, CompleteReport}
 import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  OneCatCategorization, MathCategorization}
+import surveys.SurveySet._
 
 object GenerateReport {
-  def generateReport(answers: List[Survey], title: String, c: Categorization, prefixes: List[String]) {
+  def generateReport(surveySet: SurveySet, title: String, c: Categorization, prefixes: List[String]) {
     {
-      val report = new PublishingReport(answers, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
+      val report = new PublishingReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
       val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
       fw.write(report.buildReport.toString)
       fw.close()
     }
     {
-      val report = new CompleteReport(answers, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
+      val report = new CompleteReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
       val fw = new OutputStreamWriter(new FileOutputStream(title + "-complete.html"), "UTF-8")
       fw.write(report.buildReport.toString)
       fw.close()
@@ -31,11 +32,9 @@ object GenerateReport {
     prefixes foreach { x =>
       println("Running generate report with prefix " + x)
       val answers = (new Data(salt, x :: Nil)).readSurveys
-      generateReport(answers, x + "_Report", OneCatCategorization, List(x))
-      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-1")),
-        x + "_Mathematics", MathCategorization, List(x))
-      generateReport(answers.filter(_.clazz.subject.code.startsWith("1000-2")),
-        x + "_ComputerScience", CSCategorization, List(x))
+      generateReport(new All(answers), x + "_Report", OneCatCategorization, List(x))
+      generateReport(new Math(answers), x + "_Mathematics", MathCategorization, List(x))
+      generateReport(new CS(answers), x + "_ComputerScience", CSCategorization, List(x))
     }
   }
 

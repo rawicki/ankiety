@@ -5,9 +5,10 @@ import scala.xml._
 import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
+import surveys.SurveySet._
 
-class PublishingReport(answers: List[Survey], categorization: Categorization, periods: List[String])
-        extends Report(answers, categorization) {
+class PublishingReport(surveySet: SurveySet, categorization: Categorization, periods: List[String])
+        extends Report(surveySet, categorization) {
 
   val displayComments = false
 
@@ -23,7 +24,7 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
             <img style="position: absolute; top: 0; left: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub" />
           </a>
           <h1>Wyniki ankiet {periods.sorted mkString "/"}</h1>
-          <h3>(wypełnionych ankiet: {answers.size})</h3>
+          <h3>(wypełnionych ankiet: {surveySet.values.size})</h3>
           <nav>
             <img src="templates/star-top.png" alt="*" width="12" height="25" />
             <h2 id="navhdr">MENU</h2>
@@ -77,7 +78,7 @@ class PublishingReport(answers: List[Survey], categorization: Categorization, pe
               def countAnswers(x: Survey) =
                 x.values.size + indicator(x.attendance) + indicator(x.comment)
               val howMany: Map[Int, List[Survey]] = {
-                val partial = answers.groupBy(countAnswers)
+                val partial = surveySet.values.groupBy(countAnswers)
                 val min = partial.keys.min
                 val max = partial.keys.max
                 ((min to max) map (i => i -> partial.getOrElse(i, Nil))).toMap

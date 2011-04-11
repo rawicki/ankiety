@@ -5,12 +5,13 @@ import scala.xml._
 import surveys.SurveyClasses._
 import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
 import surveys.SubjectCategories.{Category, Categorization}
+import surveys.SurveySet._
 
 trait Configuration {
   val displayComments: Boolean
 }
 
-abstract class Report(answers: List[Survey], categorization: Categorization) extends AnyRef with Configuration {
+abstract class Report(surveySet: SurveySet, categorization: Categorization) extends AnyRef with Configuration {
   type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
 
   val reportHeader: NodeSeq =
@@ -31,17 +32,17 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
       </script>
     </head>
 
-  val statsByQuestion = StatsGenerator.statsByQuestion(answers)
+  val statsByQuestion = StatsGenerator.statsByQuestion(surveySet.values)
   val questionIndices = statsByQuestion.xs.map(_.of).zipWithIndex.toMap
   val questionOrdering = Ordering.by(questionIndices)
-  val statsByClassType = StatsGenerator.statsByClassType(answers).sortBy(-_.quality.mean)
-  val statsByTitle = StatsGenerator.statsByTitle(answers).sortBy(-_.quality.mean)
-  val statsByPosition = StatsGenerator.statsByPosition(answers).sortBy(-_.quality.mean)
-  val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(answers).sortBy(-_.quality.mean)
-  val statsByPersonSubject = StatsGenerator.statsByPersonSubject(answers).sortBy(-_.quality.mean)
+  val statsByClassType = StatsGenerator.statsByClassType(surveySet.values).sortBy(-_.quality.mean)
+  val statsByTitle = StatsGenerator.statsByTitle(surveySet.values).sortBy(-_.quality.mean)
+  val statsByPosition = StatsGenerator.statsByPosition(surveySet.values).sortBy(-_.quality.mean)
+  val statsByAggregatedPosition = StatsGenerator.statsByAggregatedPosition(surveySet.values).sortBy(-_.quality.mean)
+  val statsByPersonSubject = StatsGenerator.statsByPersonSubject(surveySet.values).sortBy(-_.quality.mean)
   val intervalSize = 0.5
   val qualityHistogram: List[((Double, Double), Int)] = {
-    val xs = StatsGenerator.statsByPersonSubject(answers).map(_.quality.mean)
+    val xs = StatsGenerator.statsByPersonSubject(surveySet.values).map(_.quality.mean)
     val minQuality = 1
     val maxQuality = 7
     val ticks = Stream.from(0).map(minQuality + _*intervalSize).takeWhile(_<=maxQuality).toList
@@ -50,7 +51,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
   }
   val (quality, relativeFilled) = (for {
          CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
-    val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
+    val surveys = surveySet.values.filter(x => x.clazz.subject == subject && x.person == person)
     val ratios = for {
       x <- surveys
       answer <- x.values
@@ -59,7 +60,7 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
   } yield (qualityStats.mean, ratios.max)).unzip
   val commentsFilled = for {
          CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
-    val surveys = answers.filter(x => x.clazz.subject == subject && x.person == person)
+    val surveys = surveySet.values.filter(x => x.clazz.subject == subject && x.person == person)
     val commentsCount = surveys.filter(_.comment != None).size
     val allowedCount = (for {
         x <- surveys
@@ -68,10 +69,10 @@ abstract class Report(answers: List[Survey], categorization: Categorization) ext
       } yield (qs.allowed)).max
   } yield (commentsCount: Double) / allowedCount * 100
 
-  val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(answers, questionOrdering)
+  val statsByQuestionMatrix = StatsGenerator.statsByQuestionMatrix(surveySet.values, questionOrdering)
 
   val comments: ClassInstance => List[(Class, String)] =
-              (x: ClassInstance) => StatsGenerator.getCommentsForPersonSubject(answers, x.person, x.subject)
+              (x: ClassInstance) => StatsGenerator.getCommentsForPersonSubject(surveySet.values, x.person, x.subject)
 
   var next_tag_id: Int = 1
 
