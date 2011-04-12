@@ -154,8 +154,10 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
         $.plot($({Unparsed("\"#" + plotId + "\"")}), [
             {{
                 data: d,
-                points: {{show: true}}
-            }}]);
+                points: {{show: true}},
+            }}
+          ], {{ yaxis: {{max: 100}} }}
+        );
       }});
     </script>
   }
