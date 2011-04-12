@@ -73,38 +73,6 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
               barsPlot(data, getUniqueId())
             }
           </div>
-          <div>
-            <h2>Rozkład liczby odpowiedzi dla ≤k pytań</h2>
-            {
-              def indicator[T](x: Option[T]): Int = if (x.isDefined) 1 else 0
-              def countAnswers(x: Survey) =
-                x.values.size + indicator(x.attendance) + indicator(x.comment)
-              val howMany: Map[Int, List[Survey]] = {
-                val partial = surveySet.values.groupBy(countAnswers)
-                val min = partial.keys.min
-                val max = partial.keys.max
-                ((min to max) map (i => i -> partial.getOrElse(i, Nil))).toMap
-              }
-              def cumulative(xs: Map[Int, Int]): Map[Int, Int] = {
-                val min = xs.keys.min
-                val max = xs.keys.max
-                (for {
-                  i <- min to max
-                  keys = (min to i).toList
-                } yield i -> keys.map(xs).sum).toMap
-              }
-              val answersCounted: Map[Int, Int] = howMany.mapValues(_.size)
-              val commentsCounted: Map[Int, Int] = howMany.mapValues(_.count(_.comment.isDefined))
-              val cumulativeAnswersCounted = cumulative(answersCounted).toList.sortBy(_._1)
-              val cumulativeCommentCounts = cumulative(commentsCounted).toList.sortBy(_._2)
-              val d1 = cumulativeCommentCounts
-              val d2 = cumulativeAnswersCounted map {
-                case (i, v) => i -> (v - commentsCounted(i))
-              }
-              val ticks = d1.map(_._1).sorted.map(i => i -> ("≤"+i))
-              stackedBarsPlot(ticks, cumulativeCommentCounts, cumulativeAnswersCounted, getUniqueId())
-            }
-          </div>
           <div class="center" id="correlations">
             <h2>Korelacja pomiędzy wynikami z pytań</h2>
             {
