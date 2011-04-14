@@ -104,7 +104,6 @@ object StatsGenerator {
 
   def statsByQuestionMatrix(xs: List[Survey], qo: Ordering[Question]): PartialMatrix[(Stats[_], Stats[_])] = {
     def toMultiMap[T,U](xs: List[(T,U)]): Map[T, Set[U]] = xs.groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
-    //FIXME: Change to Question from String
     def statsByQuestion(q: Question, xs: List[Survey]): Stats[String] = {
       val answers = for (x <- xs; a <- x.values if a.qi.question == q) yield a
       getStats(q.value, answers)
