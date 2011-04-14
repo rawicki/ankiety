@@ -35,6 +35,7 @@ object GenerateReport {
       generateReport(new All(answers), x + "_Report", OneCatCategorization, List(x))
       generateReport(new Math(answers), x + "_Mathematics", MathCategorization, List(x))
       generateReport(new CS(answers), x + "_ComputerScience", CSCategorization, List(x))
+      generateReport(new Bio(answers), x + "_Bioinformatics", OneCatCategorization, List(x))
     }
   }
 
