@@ -53,14 +53,9 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
     for (p1 :: p2 :: Nil <- intervals) yield (p1 -> p2) -> xs.count(x => p1 <= x && x < p2)
   }
   val (quality, relativeFilled) = (for {
-         CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
-    val surveys = surveySet.values.filter(x => x.clazz.subject == subject && x.person == person)
-    val ratios = for {
-      x <- surveys
-      answer <- x.values
-      val qs = answer.qi.qs
-    } yield (qs.filled: Double) / qs.allowed * 100
-  } yield (qualityStats.mean, ratios.max)).unzip
+         CompleteStats(_, qualityStats, _) <- statsByPersonSubject
+  } yield (qualityStats.mean, samplePercent(qualityStats))).unzip
+
   val commentsFilled = for {
          CompleteStats(ClassInstance(person, subject, _), qualityStats, _) <- statsByPersonSubject
     val surveys = surveySet.values.filter(x => x.clazz.subject == subject && x.person == person)
