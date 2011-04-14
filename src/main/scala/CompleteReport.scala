@@ -77,9 +77,7 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
           <div>
             <h2>Rozkład liczby odpowiedzi dla ≤k pytań</h2>
             {
-              def indicator[T](x: Option[T]): Int = if (x.isDefined) 1 else 0
-              def countAnswers(x: Survey) =
-                x.values.size + indicator(x.attendance) + indicator(x.comment)
+              def countAnswers(x: Survey) = x.values.size
               val howMany: Map[Int, List[Survey]] = {
                 val partial = surveySet.values.groupBy(countAnswers)
                 val min = partial.keys.min
@@ -90,20 +88,20 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
                 val min = xs.keys.min
                 val max = xs.keys.max
                 (for {
-                  i <- min to max
+                  i <- math.max(min, 1) to max
                   keys = (min to i).toList
                 } yield i -> keys.map(xs).sum).toMap
               }
               val answersCounted: Map[Int, Int] = howMany.mapValues(_.size)
               val commentsCounted: Map[Int, Int] = howMany.mapValues(_.count(_.comment.isDefined))
-              val cumulativeAnswersCounted = cumulative(answersCounted).toList.sortBy(_._1)
-              val cumulativeCommentCounts = cumulative(commentsCounted).toList.sortBy(_._2)
-              val d1 = cumulativeCommentCounts
-              val d2 = cumulativeAnswersCounted map {
-                case (i, v) => i -> (v - commentsCounted(i))
+              val cumulativeAnswersCounted = cumulative(answersCounted)
+              val cumulativeCommentCounts = cumulative(commentsCounted)
+              val d1 = cumulativeCommentCounts.toList.sortBy(_._2)
+              val d2 = cumulativeAnswersCounted.toList.sortBy(_._1) map {
+                case (i, v) => i -> (v - cumulativeCommentCounts(i))
               }
               val ticks = d1.map(_._1).sorted.map(i => i -> ("≤"+i))
-              stackedBarsPlot(ticks, cumulativeCommentCounts, cumulativeAnswersCounted, getUniqueId())
+              stackedBarsPlot(ticks, d1, d2, getUniqueId())
             }
           </div>
           <div class="center" id="correlations">
