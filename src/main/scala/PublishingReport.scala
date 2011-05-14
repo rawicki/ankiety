@@ -27,18 +27,20 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
           </a>
           <h1>{title}</h1>
           <h3>(wypełnionych ankiet: {surveySet.values.size})</h3>
-          <nav>
-            <img src="templates/star-top.png" alt="*" width="12" height="25" />
-            <h2 id="navhdr">MENU</h2>
-            <ul id="navmenu">
-              <li><a href="#top">Góra</a></li>
-              <li><a href="#questions">Pytania</a></li>
-              <li><a href="#correlations">Korelacje</a></li>
-              <li><a href="#thebest">Najlepsi</a></li>
-              <li><a href="#legend">Legenda</a></li>
-            </ul>
-            <img class="star" src="templates/star-bottom.png" alt="*" width="12" height="29" />
-          </nav>
+          <div id="nav">
+            <nav>
+              <img src="templates/star-top.png" alt="*" width="12" height="25" />
+              <h2 id="navhdr">MENU</h2>
+              <ul id="navmenu">
+                <li><a href="#top">Góra</a></li>
+                <li><a href="#questions">Pytania</a></li>
+                <li><a href="#correlations">Korelacje</a></li>
+                <li><a href="#thebest">Najlepsi</a></li>
+                <li><a href="#legend">Legenda</a></li>
+              </ul>
+              <img class="star" src="templates/star-bottom.png" alt="*" width="12" height="29" />
+            </nav>
+          </div>
 
           <div class="center" id="questions">
             <h2>Średni wynik wg pytania</h2>
