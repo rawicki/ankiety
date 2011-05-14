@@ -11,15 +11,13 @@ object GenerateReport {
   def generateReport(surveySet: SurveySet, title: String, c: Categorization, prefixes: List[String]) {
     {
       val report = new PublishingReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
-      val fw = new OutputStreamWriter(new FileOutputStream(title + ".html"), "UTF-8")
-      fw.write(report.buildReport.toString)
-      fw.close()
+      scala.xml.XML.save(filename = title + ".html", node = report.buildReport,
+        enc = "UTF-8", doctype = report.doctype)
     }
     {
       val report = new CompleteReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
-      val fw = new OutputStreamWriter(new FileOutputStream(title + "-complete.html"), "UTF-8")
-      fw.write(report.buildReport.toString)
-      fw.close()
+      scala.xml.XML.save(filename = title + "-complete.html", node = report.buildReport,
+        enc = "UTF-8", doctype = report.doctype)
     }
   }
 

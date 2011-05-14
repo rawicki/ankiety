@@ -14,7 +14,7 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
 
   val title = "Wyniki ankiet %1s - %2s".format(periods.sorted mkString "/", surveySet.name)
 
-  def buildReport: NodeSeq = {
+  def buildReport: Node = {
     val rankingPercent = 25
 
     val report =

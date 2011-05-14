@@ -15,6 +15,8 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
   type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
 
   val title: String
+  
+  val doctype: dtd.DocType = dtd.DocType("html", dtd.SystemID("about:legacy-compat"), Nil)
 
   lazy val reportHeader: NodeSeq =
     <head>
@@ -343,6 +345,6 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
     }).flatten
   }
 
-  def buildReport: NodeSeq
+  def buildReport: Node
 }
 
