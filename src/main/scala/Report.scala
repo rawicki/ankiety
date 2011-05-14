@@ -24,6 +24,7 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
       <link rel="stylesheet" type="text/css" href="templates/style.css"/>
       <script type="text/javascript" src="templates/jquery-1.4.3.js"></script>
       <script type="text/javascript" src="templates/jquery.sparkline.js"></script>
+      <!--[if IE]><script language="javascript" type="text/javascript" src="templates/flot/excanvas.min.js"></script><![endif]-->
       <script type="text/javascript" src="templates/flot/jquery.flot.js"></script>
       <script type="text/javascript" src="templates/flot/jquery.flot.stack.js"></script>
 
