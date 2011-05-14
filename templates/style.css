@@ -1,8 +1,8 @@
 body {
     margin: 50px 100px;
     text-align: center;
-    font-size: 12px;
-    font-family: "Futura", "Trebuchet MS", sans-serif
+    font-size: 11pt;
+    font-family: "Futura", "Avant Garde","Helvetica", "Trebuchet MS", sans-serif
 }
 
 h1 {
@@ -10,6 +10,7 @@ h1 {
 }
 
 nav {
+    font-size: 12px;
     cursor:pointer;
     min-width:50px;
     max-width:110px;
@@ -152,4 +153,8 @@ div.comment {
 
 span.inlinesparkbar {
     margin: 0px 7px;
+}
+
+div.note {
+  font-size: 0.9em;
 }
