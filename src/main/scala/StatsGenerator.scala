@@ -126,7 +126,6 @@ object StatsGenerator {
       val surveys = (answersByQuestion(q1) intersect answersByQuestion(q2)).toList
       if surveys != Nil
     } yield {
-      printInfo(q1, q2, surveys)
       (q1.value, q2.value) -> (statsByQuestion(q1, surveys), statsByQuestion(q2, surveys))
     }
     PartialMatrix(questions.map(_.value), values.toMap)
