@@ -264,8 +264,11 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
         <td>{ implicitly[Show[Subject]].toHTML(subject) }</td>
         <td>{ show_question_stats(quality) }</td>
         <td>{
-          val s = quality.xs.find(_.of.question == understandingQuestion).get
-          show_mean(s) ++ dumpForSparkbar(s, 1 to 7)
+          val s = quality.xs.find(_.of.question == understandingQuestion)
+          s match {
+            case Some(sn) => show_mean(sn) ++ dumpForSparkbar(sn, 1 to 7)
+            case None => "--"
+          }
         }</td>
         <td>{ show_attendance_stats(attendance) }</td>
         <td>
