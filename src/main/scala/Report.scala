@@ -292,21 +292,21 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
     }).flatten
   }
 
-  def showPerPersonByQuality(xs: List[ClassStats], limitPercent: Int,
+  def showPerPersonByQuality(xs: List[ClassStats], limitPercent: Int, minSampleSize: Int,
                              comments: ClassInstance => List[(Class, String)]) = {
     implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
     val columnHeaders: String => NodeSeq = (x: String) => x match {
       case "Oceny" => Unparsed("Oceny&darr;")
       case x => new Text(x)
     }
-    show_per_person_stats(xs, limitPercent, comments, columnHeaders)
+    show_per_person_stats(xs, limitPercent, minSampleSize, comments, columnHeaders)
   }
 
-  def show_per_person_stats(xs: List[ClassStats], limitPercent: Int,
+  def show_per_person_stats(xs: List[ClassStats], limitPercent: Int, minSampleSize: Int,
                             comments: ClassInstance => List[(Class, String)],
                             columnHeaders: String => NodeSeq = (new Text(_)))
     (implicit ord: Ordering[ClassStats]): NodeSeq = {
-    def keep(x: ClassStats) = x.quality.sample_size >= 5
+    def keep(x: ClassStats) = x.quality.sample_size >= minSampleSize
     def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = if (xs == Nil) Nil else {
       val n = scala.math.ceil((p * xs.size: Double) / 100).toInt
       val (ys1, ys2) = xs.sorted splitAt n

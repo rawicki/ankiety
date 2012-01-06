@@ -16,6 +16,7 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
 
   def buildReport: Node = {
     val rankingPercent = 25
+    val minSampleSize = 5
 
     val report =
       <html>
@@ -132,7 +133,7 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
           <div class="center" id="thebest">
             <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
             {
-              showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent,
+              showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent, minSampleSize,
                 comments), categorization)
             }
           </div>

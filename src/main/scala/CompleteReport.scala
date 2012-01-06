@@ -16,6 +16,7 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
 
   def buildReport: Node = {
     val rankingPercent = 25
+    val minSampleSize = 5
 
     val report =
       <html>
@@ -139,7 +140,7 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
           <div class="center" id="thebest">
             <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
             {
-              showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent,
+              showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent, minSampleSize,
                 comments), categorization)
             }
           </div>
@@ -147,21 +148,21 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
             <h2>{rankingPercent}% najgorszych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean)
-              show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
+              show_per_person_stats(statsByPersonSubject, rankingPercent, minSampleSize, comments)
             }
           </div>
           <div class="center" id="controversial">
             <h2>{rankingPercent}% najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.quality.dev).reverse
-              show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
+              show_per_person_stats(statsByPersonSubject, rankingPercent, minSampleSize, comments)
             }
           </div>
           <div class="center" id="mostskipped">
             <h2>{rankingPercent}% najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
             {
               implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
-              show_per_person_stats(statsByPersonSubject, rankingPercent, comments)
+              show_per_person_stats(statsByPersonSubject, rankingPercent, minSampleSize, comments)
             }
           </div>
           <div class="center" id="scatterplots">
