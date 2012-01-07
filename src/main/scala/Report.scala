@@ -255,12 +255,12 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
       </tbody>
     </table>
 
-  def show_per_person_stats_rows(xs: List[ClassStats], comments: ClassInstance => List[(Class, String)]): NodeSeq = {
+  def show_per_person_stats_rows(xs: List[ClassStats], comments: ClassInstance => List[(Class, String)], groupByPerson: Boolean): NodeSeq = {
     val understandingQuestion = Question("Czy zajęcia były prowadzone w sposób zrozumiały?")
     (for (CompleteStats(classInstance @ ClassInstance(person, subject, classType), quality, attendance) <- xs) yield {
       val cs_block_id = getUniqueId.toString
       <tr>
-        <th>{ implicitly[Show[Person]].toHTML(person) }</th>
+        <th>{ if(groupByPerson){ classType } else { implicitly[Show[Person]].toHTML(person) } }</th>
         <td>{ implicitly[Show[Subject]].toHTML(subject) }</td>
         <td>{ show_question_stats(quality) }</td>
         <td>{
@@ -296,18 +296,18 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
   }
 
   def showPerPersonByQuality(xs: List[ClassStats], limitPercent: Int, minSampleSize: Int,
-                             comments: ClassInstance => List[(Class, String)]) = {
+                             comments: ClassInstance => List[(Class, String)], groupByPerson: Boolean = false) = {
     implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
     val columnHeaders: String => NodeSeq = (x: String) => x match {
       case "Oceny" => Unparsed("Oceny&darr;")
       case x => new Text(x)
     }
-    show_per_person_stats(xs, limitPercent, minSampleSize, comments, columnHeaders)
+    show_per_person_stats(xs, limitPercent, minSampleSize, comments, columnHeaders, groupByPerson)
   }
 
   def show_per_person_stats(xs: List[ClassStats], limitPercent: Int, minSampleSize: Int,
                             comments: ClassInstance => List[(Class, String)],
-                            columnHeaders: String => NodeSeq = (new Text(_)))
+                            columnHeaders: String => NodeSeq = (new Text(_)), groupByPerson: Boolean = false)
     (implicit ord: Ordering[ClassStats]): NodeSeq = {
     def keep(x: ClassStats) = x.quality.sample_size >= minSampleSize
     def takeTopPercent[T](xs: List[T], p: Int)(implicit ord: Ordering[T]) = if (xs == Nil) Nil else {
@@ -320,21 +320,34 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
       <thead>
         <tr>
           {
-            val columns = List("Osoba", "Przedmiot", "Oceny", "Średnia zrozumiałość", "Obecność (%)", "Próbka") ++
+            val columns = List(if(groupByPerson){ "Osoba" } else { "Typ zajęć" },
+              "Przedmiot", "Oceny", "Średnia zrozumiałość", "Obecność (%)", "Próbka") ++
               (if (displayComments) List("Komentarze") else Nil)
             for (x <- columns) yield <th>{columnHeaders(x)}</th>
           }
         </tr>
       </thead>
       <tbody>{
-        for {
-          (classType, cxs) <- xs groupBy (_.of.classType)
-          (preserved, discarded) = cxs partition keep
-        } yield {
-          <tr class="class-type-header">
-            <th colspan="7">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
-          </tr> ++
-          show_per_person_stats_rows(takeTopPercent(preserved, limitPercent), comments)
+        if(groupByPerson){
+          for {
+            (person, cxs) <- xs groupBy (_.of.person)
+            (preserved, discarded) = cxs partition keep
+          } yield {
+            <tr class="class-type-header">
+              <th colspan="7">Zajęcia prowadzone przez: { implicitly[Show[Person]].toHTML(person) } </th>
+            </tr> ++
+            show_per_person_stats_rows(preserved, comments, groupByPerson)
+          }
+        } else {
+          for {
+            (classType, cxs) <- xs groupBy (_.of.classType)
+            (preserved, discarded) = cxs partition keep
+          } yield {
+            <tr class="class-type-header">
+              <th colspan="7">Zajęcia typu: { classType } (odrzuconych {showPercent(percent(discarded.size, cxs.size))})</th>
+            </tr> ++
+            show_per_person_stats_rows(takeTopPercent(preserved, limitPercent), comments, groupByPerson)
+          }
         }
       }</tbody>
     </table>

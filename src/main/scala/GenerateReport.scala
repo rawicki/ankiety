@@ -3,21 +3,30 @@ import scala.xml._
 
 import surveys.SurveyClasses.{Survey, Subject}
 import surveys.DataImporter.Data
-import surveys.ReportBuilder.{PublishingReport, CompleteReport}
+import surveys.ReportBuilder.{PublishingReport, CompleteReport, PersonalReport}
 import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  OneCatCategorization, MathCategorization}
 import surveys.SurveySet._
 
 object GenerateReport {
   def generateReport(surveySet: SurveySet, title: String, c: Categorization, prefixes: List[String]) {
     {
+      println("Generating PublishingReport")
       val report = new PublishingReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
       scala.xml.XML.save(filename = title + ".html", node = report.buildReport,
         enc = "UTF-8", doctype = report.doctype)
     }
     {
+      println("Generating CompleteReport")
       val report = new CompleteReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
       scala.xml.XML.save(filename = title + "-complete.html", node = report.buildReport,
         enc = "UTF-8", doctype = report.doctype)
+    }
+    {
+      println("Generating PersonalReport")
+      val report = new PersonalReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
+      val fw = new OutputStreamWriter(new FileOutputStream(title + "-personal.html"), "UTF-8")
+      fw.write(report.buildReport.toString)
+      fw.close()
     }
   }
 
