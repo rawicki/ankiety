@@ -60,47 +60,8 @@ class PersonalReport(surveySet: SurveySet, categorization: Categorization, perio
               </tbody>
             </table>
           </div>
-          <div>
-            <h2>Rozkład całkowitej liczby odpowiedzi według pytania</h2>
-            {
-              val data = statsByQuestion.xs map { x =>
-                "(%1d)".format(questionIndices(x.of)) -> x.sample_size
-              }
-              barsPlot(data, getUniqueId())
-            }
-          </div>
-          <div>
-            <h2>Rozkład liczby odpowiedzi dla ≤k pytań</h2>
-            {
-              def countAnswers(x: Survey) = x.values.size
-              val howMany: Map[Int, List[Survey]] = {
-                val partial = surveySet.values.groupBy(countAnswers)
-                val min = partial.keys.min
-                val max = partial.keys.max
-                ((min to max) map (i => i -> partial.getOrElse(i, Nil))).toMap
-              }
-              def cumulative(xs: Map[Int, Int]): Map[Int, Int] = {
-                val min = xs.keys.min
-                val max = xs.keys.max
-                (for {
-                  i <- math.max(min, 1) to max
-                  keys = (min to i).toList
-                } yield i -> keys.map(xs).sum).toMap
-              }
-              val answersCounted: Map[Int, Int] = howMany.mapValues(_.size)
-              val commentsCounted: Map[Int, Int] = howMany.mapValues(_.count(_.comment.isDefined))
-              val cumulativeAnswersCounted = cumulative(answersCounted)
-              val cumulativeCommentCounts = cumulative(commentsCounted)
-              val d1 = cumulativeCommentCounts.toList.sortBy(_._2)
-              val d2 = cumulativeAnswersCounted.toList.sortBy(_._1) map {
-                case (i, v) => i -> (v - cumulativeCommentCounts(i))
-              }
-              val ticks = d1.map(_._1).sorted.map(i => i -> ("≤"+i))
-              stackedBarsPlot(ticks, d1, d2, getUniqueId())
-            }
-          </div>
           <div class="center" id="people">
-            <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
+            <h2>Wyniki z podziałem na osoby</h2>
             {
               showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent, minSampleSize,
                 comments, true), categorization)
