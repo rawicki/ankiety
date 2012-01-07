@@ -78,7 +78,7 @@ class Data(hashSalt: Option[String], filePrefixes: List[String]) {
     def parseClass(subject: Subject, x: Vector[String]): Class =
       Class(subject, extract(x, "id zajęć"), extract(x, "kod zajęć"), extract(x, "opis zajęć"))
     var printedWarnings: Set[String] = Set();
-    def warnOnce(x: String): Unit = { if (!(printedWarnings contains x)) { println(x); printedWarnings += x } }
+    def warnOnce(x: String): Unit = { if (!(printedWarnings contains x)) { /*println(x);*/ printedWarnings += x } }
     def parsePerson(x: Vector[String], positions: Map[String, Position]): Person = {
       val rawTitle = extract(x, "tytul")
       val id = extract(x, "id osoby")
