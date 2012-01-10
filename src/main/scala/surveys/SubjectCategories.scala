@@ -18,8 +18,8 @@ trait Categorization {
   def assign(x: Subject): Category = {
     categories filter (_ contains x) match {
       case x :: Nil => x
-      case Nil => error("Subject %1s was not matched by any category".format(x))
-      case xs => error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
+      case Nil => sys.error("Subject %1s was not matched by any category".format(x))
+      case xs => sys.error("Subject %1s matched more than one category: %2s".format(x, xs map (_.name)))
     }
   }
 }

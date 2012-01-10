@@ -50,7 +50,7 @@ object GenerateReport {
   def findDataPrefixes: List[String] = {
     val dataDir = new java.io.File("data/")
     if (!dataDir.exists)
-      error("data directory doesn't exist")
+      sys.error("data directory doesn't exist")
     val prefixes = for (x <- dataDir.list if x endsWith "_zajecia_wszystko.csv") yield
       x stripSuffix "_zajecia_wszystko.csv"
     prefixes.toList.distinct

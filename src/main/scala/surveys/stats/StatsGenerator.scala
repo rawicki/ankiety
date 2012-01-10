@@ -38,7 +38,7 @@ object StatsGenerator {
   }
 
   def withDefaultStats[T](s: Option[Stats[T]]): Stats[T] = {
-    s getOrElse error("needed empty stats")
+    s getOrElse sys.error("needed empty stats")
   }
 
   def getStats[T](of: T, xs: List[Answer]): Stats[T] = {
