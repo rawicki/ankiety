@@ -1,10 +1,11 @@
+package surveys
+
 import java.io.{OutputStreamWriter, FileOutputStream}
 import scala.xml._
 
-import surveys.SurveyClasses.{Survey, Subject}
+import surveys.model.{Survey, Subject}
 import surveys.DataImporter.Data
-import surveys.ReportBuilder.{PublishingReport, CompleteReport, PersonalReport}
-import surveys.SubjectCategories.{Category, Categorization, CSCategorization,  OneCatCategorization, MathCategorization}
+import surveys.report._
 import surveys.SurveySet._
 
 object GenerateReport {

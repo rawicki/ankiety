@@ -1,7 +1,7 @@
 package surveys.SurveySet
 
-import surveys.SubjectCategories._
-import surveys.SurveyClasses.Survey
+import surveys._
+import surveys.model.Survey
 
 trait SurveySet {
 

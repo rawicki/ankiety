@@ -1,6 +1,6 @@
-package surveys.SubjectCategories
+package surveys
 
-import surveys.SurveyClasses.Subject
+import surveys.model.Subject
 
 trait Category {
   def contains(x: Subject): Boolean

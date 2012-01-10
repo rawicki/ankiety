@@ -1,7 +1,7 @@
 package surveys.DataImporter
 
 import scala.io.Source
-import surveys.SurveyClasses._
+import surveys.model._
 
 class Data(hashSalt: Option[String], filePrefixes: List[String]) {
   def openDataFileRaw(filename: String): (Vector[String], List[Vector[String]]) = {

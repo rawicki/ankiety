@@ -1,10 +1,10 @@
-package surveys.ReportBuilder
+package surveys.report
 
 import scala.xml._
 
-import surveys.SurveyClasses._
-import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
-import surveys.SubjectCategories.{Category, Categorization}
+import surveys.model._
+import surveys.stats._
+import surveys.{Category, Categorization}
 import surveys.SurveySet._
 
 trait Configuration {

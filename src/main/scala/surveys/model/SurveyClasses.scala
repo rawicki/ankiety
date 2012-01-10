@@ -1,4 +1,4 @@
-package surveys.SurveyClasses
+package surveys.model
 
 case class Subject(period: String, code: String, description: String)
 

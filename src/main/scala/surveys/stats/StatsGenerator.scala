@@ -1,6 +1,6 @@
-package surveys.StatsGenerator
+package surveys.stats
 
-import surveys.SurveyClasses._
+import surveys.model._
 
 case class Stats[T](of: T, mean: Double, dev: Double, med: Double, sample_size: Int, xs: List[Double]) {
   def correlationWith(s: Stats[_]): Double = {

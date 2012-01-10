@@ -1,22 +1,22 @@
-package surveys.ReportBuilder
+package surveys.report
 
 import scala.xml._
 
-import surveys.SurveyClasses._
-import surveys.StatsGenerator.{Stats, CompleteStats, CompositeStats, ClassInstance, StatsGenerator}
-import surveys.SubjectCategories.{Category, Categorization}
+import surveys.model._
+import surveys.stats._
+import surveys.{Category, Categorization}
 import surveys.SurveySet._
 
-class CompleteReport(surveySet: SurveySet, categorization: Categorization, periods: List[String])
+class PublishingReport(surveySet: SurveySet, categorization: Categorization, periods: List[String])
         extends Report(surveySet, categorization) {
 
-  val displayComments = true
+  val displayComments = false
 
   val title = "Wyniki ankiet %1s - %2s".format(periods.sorted mkString "/", surveySet.name)
 
   def buildReport: Node = {
-    val rankingPercent = 100
-    val minSampleSize = 0
+    val rankingPercent = 25
+    val minSampleSize = 5
 
     val report =
       <html>
@@ -36,12 +36,7 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
                 <li><a href="#top">Góra</a></li>
                 <li><a href="#questions">Pytania</a></li>
                 <li><a href="#correlations">Korelacje</a></li>
-                <li><a href="#categorized">Wg. kategorii</a></li>
                 <li><a href="#thebest">Najlepsi</a></li>
-                <li><a href="#theworst">Najsłabsi</a></li>
-                <li><a href="#controversial">Kontrowersyjni</a></li>
-                <li><a href="#mostskipped">Najczęściej opuszczane</a></li>
-                <li><a href="#scatterplots">Wypełnienia, a&nbsp;oceny</a></li>
                 <li><a href="#legend">Legenda</a></li>
               </ul>
               <img class="star" src="templates/star-bottom.png" alt="*" width="12" height="29" />
@@ -54,14 +49,18 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
               <thead>
                 <tr>
                   <th>Pytanie</th>
-                  <th>Średnia</th>
+                  <th>Średnia&darr;</th>
                 </tr>
               </thead>
               <tbody>
                 {
-                  for(stats <- statsByQuestion.xs.sortBy(_.mean)) yield
+                  implicit val statsOrd = Ordering.by((x: Stats[Question]) => x.mean).reverse
+                  for(stats <- statsByQuestion.xs.sorted) yield
                     <tr>
-                    <th>{ implicitly[Show[Question]].toHTML(stats.of) }</th>
+                    <th>
+                      { implicitly[Show[Question]].toHTML(stats.of) }
+                      <span style="font-size: 0.6em">({questionIndices(stats.of)})</span>
+                    </th>
                     <td>{ show_mean(stats) }</td>
                     </tr>
                 }
@@ -116,26 +115,20 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
                     (scala.math.min(400 - correlation * 400, 220)).toInt.toHexString * 3
                   }
                   val cor = stats1 correlationWith stats2
-                  <span style={ "color: #" + getColour(cor) }>{show_double(cor)}</span>
+                  val n = stats1.sample_size
+                  <span style={ "color: #" + getColour(cor) } title={"Próbka: " + n}>{show_double(cor)}</span>
                 }
               }
             }
           </div>
-          <div class="center" id="categorized">
-            <h2>Średni wynik dla wszystkich pytań wg stopnia lub tytułu naukowego</h2>
-            { show_per_category_stats(statsByTitle, "Stopień/Tytuł") }
-          </div>
-          <div class="center">
-            <h2>Średni wynik dla wszystkich pytań wg rodzaju stanowiska</h2>
-            { show_per_category_stats(statsByAggregatedPosition, "Rodzaj stanowiska") }
-          </div>
-          <div class="center">
-            <h2>Średni wynik dla wszystkich pytań wg stanowiska</h2>
-            { show_per_category_stats(statsByPosition, "Stanowisko") }
-          </div>
-          <div class="center">
-            <h2>Średni wynik dla wszystkich pytań wg typu zajęć</h2>
-            { show_per_category_stats(statsByClassType, "Typ zajęć") }
+          <div>
+            <h2>Rozkład ocen prowadzących</h2>
+            {
+              val data = qualityHistogram map {
+                case ((p1, p2), x) => "[%1.2f %2.2f)".format(p1, p2) -> x
+              }
+              barsPlot(data, getUniqueId())
+            }
           </div>
           <div class="center" id="thebest">
             <h2>Najlepsze wyniki (osoba, przedmiot)</h2>
@@ -144,29 +137,8 @@ class CompleteReport(surveySet: SurveySet, categorization: Categorization, perio
                 comments), categorization)
             }
           </div>
-          <div class="center" id="theworst">
-            <h2>{rankingPercent}% najgorszych wyników (osoba, przedmiot)</h2>
-            {
-              implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean)
-              show_per_person_stats(statsByPersonSubject, rankingPercent, minSampleSize, comments)
-            }
-          </div>
-          <div class="center" id="controversial">
-            <h2>{rankingPercent}% najbardziej kontrowersyjnych wyników (osoba, przedmiot)</h2>
-            {
-              implicit val ord = Ordering.by[ClassStats, Double](_.quality.dev).reverse
-              show_per_person_stats(statsByPersonSubject, rankingPercent, minSampleSize, comments)
-            }
-          </div>
-          <div class="center" id="mostskipped">
-            <h2>{rankingPercent}% najczęściej opuszczanych zajęć (osoba, przedmiot)</h2>
-            {
-              implicit val ord = Ordering.by[ClassStats, Double](_.attendance.mean)
-              show_per_person_stats(statsByPersonSubject, rankingPercent, minSampleSize, comments)
-            }
-          </div>
-          <div class="center" id="scatterplots">
-            <h2>Ocena prowadzącego a procent wypełnionych ankiet</h2>
+          <div class="center">
+            <h2>Ocena (X) pary (osoba, przedmiot) a procent (Y) wypełnionych ankiet</h2>
             { scatterPlot(quality zip relativeFilled, 0) }
           </div>
           <div class="center">
