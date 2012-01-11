@@ -297,7 +297,11 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
 
   def showPerPersonByQuality(xs: List[ClassStats], limitPercent: Int, minSampleSize: Int,
                              comments: ClassInstance => List[(Class, String)], groupByPerson: Boolean = false) = {
-    implicit val ord = Ordering.by[ClassStats, Double](_.quality.mean).reverse
+    implicit val ord = if(!groupByPerson){
+      Ordering.by[ClassStats, Double](_.quality.mean).reverse
+    } else {
+      Ordering.by[ClassStats, String](_.of.person.lastName)
+    }
     val columnHeaders: String => NodeSeq = (x: String) => x match {
       case "Oceny" => Unparsed("Oceny&darr;")
       case x => new Text(x)
