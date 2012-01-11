@@ -320,7 +320,7 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
       <thead>
         <tr>
           {
-            val columns = List(if(groupByPerson){ "Osoba" } else { "Typ zajęć" },
+            val columns = List(if(!groupByPerson){ "Osoba" } else { "Typ zajęć" },
               "Przedmiot", "Oceny", "Średnia zrozumiałość", "Obecność (%)", "Próbka") ++
               (if (displayComments) List("Komentarze") else Nil)
             for (x <- columns) yield <th>{columnHeaders(x)}</th>

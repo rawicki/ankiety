@@ -65,8 +65,7 @@ class PersonalReport(surveySet: SurveySet, categorization: Categorization, perio
           <div class="center" id="people">
             <h2>Wyniki z podziałem na osoby</h2>
             {
-              showCategorized(statsByPersonSubject, _.title(rankingPercent), showPerPersonByQuality(_, rankingPercent, minSampleSize,
-                comments, true), categorization)
+              showPerPersonByQuality(statsByPersonSubject, rankingPercent, minSampleSize, comments, true)
             }
           </div>
           <div class="note" id="legend">
