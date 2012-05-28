@@ -28,6 +28,8 @@ class PublishingReport(surveySet: SurveySet, categorization: Categorization, per
           </a>
           <h1>{title}</h1>
           <h3>(wypełnionych ankiet: {surveySet.values.size})</h3>
+          <h3>(bylo wyp.: {surveySet.values.groupBy( x => (x.clazz, x.person) ).map( k => k match { case (x, v) => (v.flatMap(_.attendance).map(_.qi.qs.filled) ++ List(0)).head }  ).sum })</h3>
+          <h3>(bylo upr.: {surveySet.values.groupBy( x => (x.clazz, x.person) ).map( k => k match { case (x, v) => (v.flatMap(_.attendance).map(_.qi.qs.allowed) ++ List(0)).head }  ).sum })</h3>
           <div id="nav">
             <nav>
               <img src="templates/star-top.png" alt="*" width="12" height="25" />
