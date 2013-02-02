@@ -11,23 +11,25 @@ import surveys.SurveySet._
 object GenerateReport {
   def generateReport(surveySet: SurveySet, title: String, c: Categorization, prefixes: List[String]) {
     {
-      println("Generating PublishingReport")
+      print("PublishingReport")
       val report = new PublishingReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
       scala.xml.XML.save(filename = title + ".html", node = report.buildReport,
         enc = "UTF-8", doctype = report.doctype)
+      println(".")
     }
     {
-      println("Generating CompleteReport")
+      print("CompleteReport")
       val report = new CompleteReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
       scala.xml.XML.save(filename = title + "-complete.html", node = report.buildReport,
         enc = "UTF-8", doctype = report.doctype)
+      println(".")
     }
     {
-      println("Generating PersonalReport")
+      print("PersonalReport")
       val report = new PersonalReport(surveySet, c, prefixes.map(_.stripPrefix("1000-").toUpperCase))
-      val fw = new OutputStreamWriter(new FileOutputStream(title + "-personal.html"), "UTF-8")
-      fw.write(report.buildReport.toString)
-      fw.close()
+      scala.xml.XML.save(filename = title + "-complete.html", node = report.buildReport,
+        enc = "UTF-8", doctype = report.doctype)
+      println(".")
     }
   }
 
@@ -40,10 +42,15 @@ object GenerateReport {
     prefixes foreach { x =>
       println("Running generate report with prefix " + x)
       val answers = (new Data(salt, x :: Nil)).readSurveys
+      println("Generating complete reports:")
       generateReport(new All(answers), x + "_Report", OneCatCategorization, List(x))
+      println("Generating reports for mathematics:")
       generateReport(new Math(answers), x + "_Mathematics", MathCategorization, List(x))
+      println("Generating reports for computer science:")
       generateReport(new CS(answers), x + "_ComputerScience", CSCategorization, List(x))
+      println("Generating reports for bioinformatics:")
       generateReport(new Bio(answers), x + "_Bioinformatics", OneCatCategorization, List(x))
+      println("")
     }
   }
 

@@ -15,7 +15,7 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
   type ClassStats = CompleteStats[ClassInstance, QuestionInstance]
 
   val title: String
-  
+
   val doctype: dtd.DocType = dtd.DocType("html", dtd.SystemID("about:legacy-compat"), Nil)
 
   lazy val reportHeader: NodeSeq =
@@ -297,10 +297,10 @@ abstract class Report(surveySet: SurveySet, categorization: Categorization) exte
 
   def showPerPersonByQuality(xs: List[ClassStats], limitPercent: Int, minSampleSize: Int,
                              comments: ClassInstance => List[(Class, String)], groupByPerson: Boolean = false) = {
-    implicit val ord = if(!groupByPerson){
-      Ordering.by[ClassStats, Double](_.quality.mean).reverse
+    implicit val ord: Ordering[ClassStats] = if(!groupByPerson){
+      Ordering.by({ cs: ClassStats => cs.quality.mean }).reverse
     } else {
-      Ordering.by[ClassStats, String](_.of.person.lastName)
+      Ordering.by({ cs: ClassStats => cs.of.person.lastName })
     }
     val columnHeaders: String => NodeSeq = (x: String) => x match {
       case "Oceny" => Unparsed("Oceny&darr;")
