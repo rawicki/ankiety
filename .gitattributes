@@ -1,0 +1,2 @@
+templates/jquery*.js linguist-vendored
+templates/flot/* linguist-vendored
